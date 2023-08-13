@@ -1,0 +1,32 @@
+{
+  "pyprland": {
+    "plugins": [
+      "scratchpads"
+    ]
+  },
+  "scratchpads": {
+    "term": {
+      "command": "kitty --class kitty-dropterm",
+      "animation": "fromTop",
+      "lazy": true
+    },
+    "clash": {
+      "command": "clash-verge",
+      "animation": "fromTop",
+      "unfocus": "hide",
+      "lazy": true
+    },
+    "volume": {
+      "command": "pavucontrol",
+      "animation": "fromRight",
+      "unfocus": "hide",
+      "lazy": true
+    },
+    "network": {
+      "command": "nm-connection-editor",
+      "animation": "fromBottom",
+      "unfocus": "hide",
+      "lazy": true
+    }
+  }
+}

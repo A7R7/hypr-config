@@ -3,6 +3,7 @@
 :DOC-CONFIG:
 # Tangle by default to init.el, which is the most common case
 #+PROPERTY: header-args:conf :tangle hyprland.conf :language conf
+#+PROPERTY: header-args:json :tangle pyprland.json :language json
 #+PROPERTY: header-args:mkdirp yes :comments no
 #+STARTUP: fold
 #+OPTIONS: toc:2
@@ -176,7 +177,7 @@ Execute a shell script on startup of the compositor or on each time it's reloade
   exec-once = wl-paste --type text --watch cliphist store #Stores only text data
   exec-once = wl-paste --type image --watch cliphist store #Stores only image data
 
-  exec-once = clash-verge;
+  # exec-once = clash-verge;
   exec-once = pkill eww; eww daemon; eww open-many bar0 bar1 bar2;
   exec-once = pkill hyprpaper; hyprpaper;
 
@@ -518,3 +519,76 @@ animations {
 }
  #+end_src
  
+* Pyprland
+
+Pyprland hosts process for multiple Hyprland plugins.
+#+begin_src conf
+  exec-once = pypr
+#+end_src
+
+#+begin_src json
+  {
+    "pyprland": {
+      "plugins": [
+        "scratchpads"
+      ]
+    },
+    "scratchpads": {
+      "term": {
+        "command": "kitty --class kitty-dropterm",
+        "animation": "fromTop",
+        "lazy": true
+      },
+      "clash": {
+        "command": "clash-verge",
+        "animation": "fromTop",
+        "unfocus": "hide",
+        "lazy": true
+      },
+      "volume": {
+        "command": "pavucontrol",
+        "animation": "fromRight",
+        "unfocus": "hide",
+        "lazy": true
+      },
+      "network": {
+        "command": "nm-connection-editor",
+        "animation": "fromBottom",
+        "unfocus": "hide",
+        "lazy": true
+      }
+    }
+  }
+#+end_src
+
+ * Kitty-dropterm
+#+begin_src conf
+  bind = $mainMod, F1, exec, pypr toggle term
+  $dropterm  = ^(kitty-dropterm)$
+  windowrule = float,$dropterm
+  windowrule = workspace special silent,$dropterm
+  windowrule = size 75% 60%,$dropterm
+#+end_src
+
+ * Pavucontrol
+#+begin_src conf
+  bind = $mainMod, F5, exec, pypr toggle volume
+  windowrule = float,^(pavucontrol)$
+  windowrule = workspace special silent,^(pavucontrol)$
+  windowrule = size 25% 25%,^(pavucontrol)$
+#+end_src
+
+ * Clash-Verge
+ #+begin_src conf
+   bind = $mainMod, F4, exec, pypr toggle clash
+   windowrule = float, ^(clash-verge)$
+   windowrule = workspace special silent, ^(clash-verge)$
+   windowrule = size 60% 60%,^(clash-verge)$
+ #+end_src
+
+ * Network
+ #+begin_src conf
+   bind = $mainMod, F9, exec, pypr toggle network
+   windowrule = float, ^(nm-connection-editor)
+   windowrule = workspace special silent, ^(nm-connection-editor)$
+ #+end_src
