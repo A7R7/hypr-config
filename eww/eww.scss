@@ -1,0 +1,242 @@
+// vim:fileencoding=utf-8:foldmethod=marker
+* {
+    all: unset;
+    // font-family: "Hack Nerd Font Mono";
+}
+
+@import "color/color";
+
+window {
+  color: $blu-2;
+  font-family: "Torus Pro", sans-serif;
+  font-size: 20px;
+}
+
+tooltip {
+  background-color: rgba($bg, 0.9);
+  color: $orn-2;
+  // font-family: "Architects Daughter", cursive;
+  font-size: 1.25em;
+  border: 1px solid $orn-3;
+  // border-radius: 10px 24px 12px 20px;
+  border-radius: 20px;
+}
+
+$ease-out-snap: cubic-bezier(0.25, 0.575, 0.565, 1.314);
+@mixin cycle($color, $duration: 4s) {
+  color: $color;
+  transition: color $duration ease-in-out;
+}
+
+.bar { 
+  border: 4px solid rgba(0,50,150,0.7); 
+  border-radius: 50px;
+  // border-bottom: 4px solid rgba(0,50,150,0.5); 
+  // &.active{
+  //   background-color: $bg;
+  // }
+}
+
+.progress-bar {
+  // background: linear-gradient(to right, rgba(0,0,0,0), rgb(0, 100, 180));//$lighter;
+  background: linear-gradient(to bottom, rgba(0,80,150,0.5) 0%, rgba(0,80,150,0.1) 50%, rgba(0,80,150,0.5) 100%); 
+  border-top: 4px solid rgba(10,80,180,1);
+  border-bottom: 4px solid rgba(10,80,180,1);
+  border-right: 1px solid rgba(10,80,180,0.2);
+  border-radius: 20px 0 0 20px;
+  transition: 1s linear;
+  &::after{
+    // background: linear-gradient(to bottom, red, blue);
+  }
+}
+
+.overview {
+  // background-color: $bg;
+  // background: linear-gradient(to bottom, rgba(0,80,150,0) 10%, rgba(0,80,150,0.7) 100%);
+  // background: linear-gradient(to bottom, rgba(34,37,54,0), rgba(34,37,54,1) 50%);
+  &.workspace {
+    background: $bg;
+  }
+  &.window {
+    // background-color: $slt-3;
+    background: linear-gradient(to bottom, rgba(0,80,150,0) 10%, rgba(0,80,150,0.7));
+  }
+}
+
+.bar-button {
+  // {{{
+  font-family: FiraMono Nerd Font Propo;
+  transition: 300ms cubic-bezier(0.05, 0.9, 0.1, 1);
+  // &:hover { background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(255, 255, 255, 0.7)); }
+  &:active { transition: 0s; color: white; }
+  &:hover { background: rgba(255, 255, 255, 0.3); }
+
+  &.inactive { color: rgb(100, 120, 150); }
+  &.workspace {
+    &:hover { background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(255, 255, 255, 0.7)); }
+    &.3 {
+      color: cyan;
+      transition: 100ms;
+      &:hover { color:cyan; }
+      &:active { transition: 0s; color: white; }
+    }
+    &.2 { color: white; &:hover { color:cyan; } }
+    &.1 { color: white; &:hover { color:cyan; } }
+    &.0 { color: rgb(100, 120, 150); }
+    &.selector-fg {
+      border-bottom: 0.18em solid white;
+      transition: 300ms cubic-bezier(0.05, 0.9, 0.1, 1);
+      background: linear-gradient(to bottom, rgba(255,255,255,0) 70%,  rgba(255, 255, 255, 0.7));
+    }
+  }
+
+  &.media {
+    color: white;
+    padding: 0 0.1em;
+    margin: 0 0.2em;
+    // &:hover { background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(255, 255, 255, 0.7)); }
+    &.inactive {
+      color: $blu-2;
+      &:hover { background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(255, 255, 255, 0.7)); }
+    }
+  }
+  &.overview {
+    border-radius: 1em;
+  }
+  // }}}
+}
+.bar-button-2 {
+  // {{{
+  &:hover { background: rgba(255, 255, 255, 0.3); }
+  &:active { transition: 0s; color: white; }
+  border-radius: 1em;
+  &.overview {
+    transition: -gtk-icon-transform 0.1s linear;
+    
+    &.hide { 
+      -gtk-icon-transform: rotate(180deg); 
+    }
+    &.show { 
+      -gtk-icon-transform: rotate(0deg); 
+      &:hover { background: rgba(255, 255, 255, 0.7); }
+      border-radius: 1em;
+    }
+  }
+  // }}}
+}
+
+
+.date {
+  // {{{
+  // background: $bg;
+  // padding: 0px 1.1em;
+  // margin: 20px 5px;
+  // border-right: 3px solid $blu-1;
+  // border-top: 1px solid $blu-1;
+  border-radius: 100px;
+  // box-shadow: -3px -2px 3px 1px rgba($blu-0, 0.32);
+  &-hover {
+    border-color: $orn-3;
+    box-shadow: 3px 2px 3px 1px rgba($rby-1, 0.42);
+  }
+  &-base {
+    @include cycle($blu-2);
+    &-alt { @include cycle($blu-4); }
+  }
+  &-alive { @include cycle($pnk-3); }
+  &-dead { @include cycle($glc-5); }
+  &-day {
+    font-weight: 600;
+    font-size: 1.1em;
+  }
+  &-weeks { font-family: Archivo, monospace; }
+  &-Monday { @include cycle($pnk-4); }
+  &-Tuesday,
+  &-Thursday { @include cycle($emr-4); }
+  &-Wednesday { @include cycle($orn-4); }
+  &-Friday { @include cycle($rby-4); }
+  &-Saturday,
+  &-Sunday { @include cycle($prp-3); }
+  // }}}
+}
+
+.time { 
+  /// {{{
+  // background: $bg;
+  // border-radius: 72px 72px 15px 15px;
+  border-radius:100px;
+  // border-width: 3px 2px 0.3px;
+  // border-style: solid;
+  // border-color: $sky-0;
+  // box-shadow: 0 -2px 7px 1px rgba($sky-0, 0.42);
+  transition: all 0.5s $ease-out-snap;
+
+  &-hover {
+    transition: all 0.5s $ease-out-snap;
+    border-color: $orn-3;
+    box-shadow: 0 2px 7px 1px rgba($rby-1, 0.42);
+  }
+
+  &-text {
+    margin: -10 0;
+    font-family: ter-132n;
+    color: white;
+    font-weight: 700;
+    font-size: 1.8em;
+    transition: all 0.5s $ease-out-snap;
+  }
+
+  &-clockface {
+    font-size: 8px;
+    margin: 4px -3px 0 3px;
+  }
+  //}}}
+}
+
+.weather {
+  // {{{
+  // background: $bg;
+  border-radius: 100px;
+  // padding: 4px 1.1em;
+  // margin: 20px 5px;
+  // border-left: 3px solid $blu-1;
+  // border-top: 1px solid $blu-1;
+  // border-radius: 17px 420px 69px 420px ;
+  // box-shadow: -3px 2px 3px 1px rgba($blu-0, 0.32);
+  &-hover {
+    // border-color: $orn-3;
+    box-shadow: -3px -3px 3px 1px rgba($orn-3, 0.32);
+  }
+  &-base {
+    @include cycle($blu-0);
+    &-alt { @include cycle($blu-4); }
+  }
+  &-moon {
+    color: $glu-3;
+    &-full { color: $brt-3; }
+  }
+  &-air { @include cycle($sky-4); }
+  &-rain { @include cycle($blu-0); }
+  &-morning { @include cycle($blu-0); }
+  &-day { @include cycle($sun-2); }
+  &-max { @include cycle($rby-3); }
+  &-evening { @include cycle($prp-1); }
+  &-night { @include cycle($glc-5); }
+  &-index {
+    &-base { @include cycle($blu-2); }
+    &-low,
+    &-good { @include cycle($grn-3); }
+    &-moderate { @include cycle($sun-1); }
+    &-high,
+    &-poor { @include cycle($sun-4); }
+    &-intense { @include cycle($rby-2); }
+    &-extreme { @include cycle($pnk-2); }
+  }
+  // }}}
+}
+
+.circular{
+  background-color: $olv-3;
+  color: cyan;
+}
+

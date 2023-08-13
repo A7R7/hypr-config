@@ -1,0 +1,325 @@
+; vim:fileencoding=utf-8:foldmethod=marker
+;==================================================================================
+(defvar hour-active false)
+(defvar minute-active false)
+(defvar fine-adjust false)
+(defvar timer-visible false)
+(defvar timer-active false)
+(defvar alarm-active false)
+
+(defpoll time
+  :interval "1s"
+  :initial '{"hour":"04", "minute":"20", "second":"00"}'
+  `date +'{"hour":"%H", "minute":"%M", "second":"%S"}'`
+)
+
+
+(defwidget time []
+  ;{{{
+  (eventbox
+    :onhover "eww update timer-visible=true"
+    :onhoverlost "eww update timer-visible=false"
+    :onmiddleclick "eww update fine-adjust=${fine-adjust ? "false" : "true"}"
+    :halign "center"
+    (box
+      :class "time ${timer-visible ? "time-hover" : ""}"
+      :halign "center"
+      :valign "center"
+      ; :space-evenly false
+      ; :spacing 3
+      :style "padding: 0em ${timer-visible ? "1.318" : "0.9" }em; margin: 0 0 0.1em 0; font-size: 1em"
+      ; (alarm)
+      (clock :child "hour" :text {time.hour} :bool hour-active)
+      (label :text "${cycle-1 == 1 ? "󰔟" : "󱦟"}" 
+             :style "font-size: 1.8em; margin-bottom: -0.1em;"
+      )
+      (clock :child "minute" :text {time.minute} :bool minute-active)
+      ; (timer)
+    )
+  )
+  ;}}}
+)
+
+(defwidget clock [child bool text]
+  ;{{{
+  (eventbox
+    :class "time-${child}"
+    :onhover "eww update ${child}-active=true"
+    :onhoverlost "eww update ${child}-active=false"
+    ; :onclick "${browser} https://calendar.google.com/calendar/u/0/r/eventedit?state=%5B%5D & disown"
+    :cursor "pointer"
+    ; :tooltip "${child == "hour" ?
+    ;   " ${alarm-active ?  "set for ${alarm-end}" : "no active alarm"}" :
+    ;   "󰔟 ${timer-active ?  "${timer-current} remaining" : "no active timer"}"
+    ; } "
+    (label :class "time-${child}-${bool ? "active" : "text"} time-text" :text text)
+  )
+  ;}}}
+)
+
+;==================================================================================
+
+(defpoll date :interval "60s" `date -u +'{"month": "%B", "day": "%d", "weekday": "%A"}'`)
+(defpoll days-alive :interval "3600s" `echo $(( ($(date +%s)-$(date -d "$(<$HOME/.local/.birth)" +%s))/86400 ))`)
+(defvar date-hover false)
+(deflisten moon-phase :initial `{"icon":"", "desc":"retriving..."}`
+  `scripts/moonphase.sh 2> /dev/null;`
+)
+(defwidget date []
+  ;{{{
+  (eventbox
+    :onhover "eww update date-hover=true"
+    :onhoverlost "eww update date-hover=false"
+    :valign "center"
+    :style "${debug}" ; can not set margin to eventbox?
+    (box
+      :class "date ${date-hover ? "date-hover" : ""}"
+      :style "margin-right: 0.8em; font-size: 1.2em; ${debug}"
+      :space-evenly false
+      :spacing 4
+      (slide-n-fade
+        :bool date-hover
+        :direction "right"
+        (label
+          :class "date-weeks date-${cycle-6 == 0 ? "dead" : "alive"}"
+          :markup "<b>󰕶</b> ${days-alive}"
+          :style "margin-right: 10px;"
+          :tooltip "days survived: ${days-alive}"
+        )
+      )
+      (label
+        :class "date-month date-${cycle-6 == 1 ? "base" : "base-alt"}"
+        :text "${date.month}"
+        :style "margin-top: 1px;"
+      )
+      (label
+        :class "date-day date-${cycle-6 == 1 ? "base" : "base-alt"}"
+        :text "${date.day}"
+        :style "margin-top: 1px; margin-left: 2px;"
+        :tooltip "${date.weekday}, ${date.month} ${date.day}"
+      )
+      (label
+        :class "date-${cycle-6 == 0 ? "${date.weekday}" : "base"}"
+        :markup "  ${date.weekday}  "
+        :style "margin-right: -4px; margin-left: 1px;"
+        ; :tooltip " ${date.weekday}, ${date.month} ${date.day}"
+      )
+      (box ; the moon-phase object
+        :valign "center" :halign "center"
+        :style "border-radius: 100px; border: 2.5px solid"
+        :tooltip "${moon-phase.desc}"
+        (label
+          :valign "center" :halign "center"
+          :class "weather-moon${moon-phase.icon == "" ? "-full" : ""}"
+          :style "margin: -0.25em 0.1em; font-family: FiraCode Nerd Font Mono; font-size: 1.2em"
+          :markup "<b>${moon-phase.icon}</b>"
+        )
+      )
+    )
+  )
+  ;}}}
+)
+;==================================================================================
+
+(deflisten weather
+  :initial `{"id":"0", "icon":" ", "desc":"", "bf_icon":" ", "wind_speed":"0",  "sunset":"0",  "moon":"", "night": "false", "temp":"retriving...", "temp_morn":"", "temp_day":"", "temp_max":"", "temp_eve":"",  "temp_night":"",  "feels_like":"", "uvi":"0",  "aqi":"",  "rain_1h":"",  "rain_day":"",  "clouds":""}`
+  ` scripts/weather_owm.sh 2> /dev/null; `
+)
+; trap 'eww get weather &> .weather' EXIT
+(defvar weather-info false)
+
+(defwidget weather []
+  ;{{{
+  (eventbox
+    :onhover "eww update weather-info=true"
+    :onhoverlost "eww update weather-info=false"
+    ; :onclick "firefox-developer-edition https://www.windy.com/?hrrrConus,45.445,-122.764,9 & disown"
+    :cursor "pointer"
+    :halign "start"
+    :valign "center"
+    :style "${debug}"
+    (box
+      :class "weather ${weather-info ? "weather-hover" : "" }"
+      :space-evenly false :spacing 9
+      :style "margin-left: 0.8em; font-size: 1.2em; ${debug}"
+      (box
+        :space-evenly false :spacing 0
+        :tooltip "${weather.desc}, ${weather.temp},  feels: ${weather.feels_like}"
+        (label ;main
+          :class "weather-${cycle-6 == 0 ?
+                "${matches("${weather.night}", "true") ? "night" : "day"}"
+                : "base-alt" }"
+          :markup "<b>${weather.icon}  ${weather.temp} </b>"
+          )
+        (slide-n-fade :bool weather-info :direction "left"
+          (label
+            :class "weather-${cycle-6 == 0 ?
+              "${matches("${weather.night}", "true") ? "night" : "day"}"
+              : "base-alt"
+              }"
+            :style "margin-left: 10px; margin-right: 10px"
+            :markup "<b>󰈷</b> ${weather.feels_like}"
+          )
+        )
+      )
+      (label ;wind
+        :class "weather-${cycle-6 == 1 ? "air" : "base-alt" }"
+        :markup "<b> </b> ${weather.clouds}<small>%</small>"
+        :tooltip "cloud coverage: ${weather.clouds}% "
+      )
+      (box ;wind
+        :class "weather-${cycle-6 == 1 ? "air" : "base-alt" }"
+        :tooltip "${weather.bf_desc} (${weather.wind_speed}m/s)  "
+        :space-evenly false
+        (label
+          :markup "<big><b>${weather.bf_icon}</b></big>"
+          :style "font-size: 23px"
+        )
+        (label
+          :markup "${weather.wind_speed}m<sup>-1</sup>"
+        )
+      )
+      (label ;
+        :class "weather-index-${cycle-5 == 1 ? "${weather.uvi_desc}" : "base"}"
+        :markup "<b> </b>${weather.aqi}"
+        :tooltip "air quality index: ${weather.aqi}, ${weather.aqi_desc} "
+      )
+
+      ; (label
+      ;   :class "weather-${cycle-5 == 0 ? "rain" : "base-alt" }"
+      ;   :markup "<small><sub> </sub>${weather-info ? "${weather.rain_day}" : "${weather.rain_1h}"}<small>%</small></small>"
+      ;   :style "margin-top: 6px; margin-left: ${weather-info ? "3px" : "-6px"};"
+      ;   :tooltip "   ${weather.rain_day}% chance of rain today, ${weather.rain_1h}% in the next hour  "
+      ; )
+      (slide-n-fade :bool weather-info :direction "left"
+        (box :space-evenly false :spacing 8
+        )
+      )
+    )
+  )
+  ;}}}
+)
+
+
+;==================================================================================
+(defwidget time-progress [mon_i]
+  ;{{{
+  (overlay
+    (box :halign "fill" :valign "fill")
+    (box
+      :class "progress-bar"
+      :halign "start" :valign "fill"
+      :orientation "h"
+      :width {round(mon_w[mon_i] * (time.hour * 60 + time.minute) / 1440, 0)}
+    )
+    (time-stamp 
+      :mon_i mon_i :h "${weather.sunrise.h}" :m "${weather.sunrise.m}" 
+      :icon "󰖜" :desc "sunrise";󰖜
+    )
+    (time-stamp 
+      :mon_i mon_i :h "${weather.sunset.h}" :m "${weather.sunset.m}" 
+      :icon "󰖛" :desc "sunset"; 󰖛
+    )
+  )
+  ;}}}
+)
+;${round(mon_w[mon_i] * (weather.sunrise.h * 60 + weather.sunrise.m) / 1440, 0) - 15}
+(defwidget time-stamp [mon_i h m icon desc]
+  (box ;sunrise
+    :halign "start"
+    :valign "center"
+    :style "font-size: 1.8em;
+            font-family: FiraCode Nerd Font Mono;
+            margin-left: ${round(mon_w[mon_i] * (h * 60 + m) / 1440, 0)}; 
+            border-top: 2px solid cyan;
+            border-bottom: 2px solid cyan;
+            ${debug}"
+    ; background: linear-gradient(to bottom, rgba(0,0,0,0) 80%,  rgba(255, 255, 255, 0.7));
+    (label :text "${icon}" :halign "center" :valign "center"
+           :tooltip "${desc}"
+           :style "margin: 0 -0.25em;"
+    )
+  )
+)
+
+;==================================================================================
+(deflisten volume "scripts/volume.sh")
+(deflisten brightness "scripts/brightness.sh")
+(defwidget system []
+  ;{{{
+  (box
+    :orientation "h"
+    :halign "fill"
+    :valign "baseline"
+    :style "margin: 0 20; padding: 0 10"
+    :space-evenly false
+    :spacing 10
+    (eventbox
+      :onscroll `
+        if [ {} == "up" ]; then pactl set-sink-volume @DEFAULT_SINK@ -1%;
+        elif [ ${volume.value} -lt 100 ]; then pactl set-sink-volume @DEFAULT_SINK@ +1%; fi `
+      (circular-icon :value "${volume.value % 100}" :icon "" :desc "volume: ${volume.value}")
+    )
+    (eventbox
+      :onscroll `
+        if [ {} == "up" ]; then brightnessctl set 1%- -q;
+        else brightnessctl set 1%+ -q; fi `
+      (circular-icon :value "${brightness.value}" :icon "󰃞" :desc "brightness: ${brightness.value}")
+    )
+    (separator)
+    (circular-icon :value "${100 - round(EWW_CPU["avg"], 0)}" :icon "󰹻" :desc "cpu: ${round(EWW_CPU["avg"], 0)}%")
+    (circular-icon :value "${100 - round(EWW_RAM["used_mem_perc"], 0)}" :icon "" :desc "memory: ${round(EWW_RAM["used_mem_perc"], 0)}%")
+    (circular-icon :value "${EWW_BATTERY["BATT"].capacity}" :icon "󱐌" :desc "battery:${EWW_BATTERY["BATT"].capacity}%, ${EWW_BATTERY["BATT"].status}")
+    ; (circular-icon :value "${EWW_BATTERY["AC"].capacity}" :icon "󱐌" :desc "${EWW_BATTERY["AC"].status}")
+  )
+  ;}}}
+)
+
+(defwidget circular-icon [value icon desc]
+  ;{{{
+  (box
+    :tooltip desc
+    (circular-progress
+      :value value
+      :thickness 3
+      :start-at 25
+      :class "circular"
+      :style "padding: 0px 10px;"
+      (label 
+        :text icon 
+        :style "margin: 0.4em; font-family: FiraCode Nerd Font Mono; font-size: 1.2em"
+      )
+    )
+  )
+  ;}}}
+)
+;==================================================================================
+(defwidget bar0 []
+  ;{{{
+  (overlay
+    (box 
+      :class "bar ${show_overview ? 'active' : ''}" 
+      :orientation "horizontal" :halign "fill" :valign "fill"
+      :style "${debug}"
+    )
+    (time-progress :mon_i 0)
+    (centerbox
+      (box
+        (box :halign "start" 
+          :space-evenly false
+          (overview_button)
+          (separator)
+          (workspaces :monitor 0))
+        (box :halign "end" (date))
+      )
+      (box
+        (time)
+      )
+      (box
+        (box :halign "start" (weather))
+        (box :halign "end" (system))
+      )
+    )
+  )
+  ;}}}
+)

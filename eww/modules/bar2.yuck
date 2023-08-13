@@ -1,0 +1,20 @@
+(defwidget bar2 []
+  (overlay 
+    (box 
+      :class "bar ${show_overview ? 'active' : ''}" 
+      :orientation "horizontal" :halign "fill" :valign "fill")
+    (centerbox
+      (box 
+        :space-evenly false
+        (overview_button)
+        (separator)
+        (workspaces :monitor 2)
+      )
+      (box 
+        ; (test)
+      )
+      (box 
+      )
+    )
+  )
+)

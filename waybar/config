@@ -1,0 +1,93 @@
+[
+{
+  "output":["HDMI-A-1"],
+  "layer": "top",
+  "position": "bottom",
+  "height": 20,
+  "include": [
+    "$HOME/.config/waybar/modules/hardware",
+    "$HOME/.config/waybar/modules/workspace",
+    "$HOME/.config/waybar/modules/media.json",
+  ],
+
+  "modules-left": [
+    "custom/spaceleft",
+    "wlr/workspaces",
+    "custom/spaceright",
+    "custom/empty",
+    "custom/media-prev",
+    "custom/media-status",
+    "custom/media-next",
+  ],
+
+  "modules-center": [
+    "custom/media-info",
+  ],
+
+  "modules-right": [
+    "disk",
+    "cpu",
+    "memory",
+  ],
+
+
+},
+
+{
+  "output":["DP-2"],
+  "layer":"top",
+  "position":"bottom",
+  "height":20,
+  "include": [
+    "$HOME/.config/waybar/modules/hardware",
+    "$HOME/.config/waybar/modules/clock",
+    "$HOME/.config/waybar/modules/workspace",
+  ],
+
+  "modules-left": [
+    "custom/spaceleft",
+    "wlr/workspaces",
+    "custom/spaceright",
+    "hyprland/submap",
+  ],
+
+  "modules-center": [
+    "hyprland/window",
+  ],
+
+  "modules-right": [
+    "pulseaudio",
+    "simpleclock",
+  ],
+},
+
+{
+  "output":["eDP-1"],
+  "layer":"top",
+  "position":"bottom",
+  "height":20,
+  "include": [
+    "$HOME/.config/waybar/modules/hardware",
+    "$HOME/.config/waybar/modules/clock",
+    "$HOME/.config/waybar/modules/workspace",
+  ],
+
+  "modules-left": [
+    "custom/spaceleft",
+    "wlr/workspaces",
+    "custom/spaceright",
+    "hyprland/submap",
+  ],
+  "modules-center": [
+    "clock",
+  ],
+  "modules-right": [
+    "network",
+    "pulseaudio",
+    "battery",
+    "tray",
+  ],
+},
+]
+
+

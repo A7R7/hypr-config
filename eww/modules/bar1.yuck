@@ -1,0 +1,101 @@
+
+(deflisten player-position :initial "0" 
+  "playerctl --ignore-player=firefox metadata --format '{{position}}' -F")
+(deflisten player :initial `{"player": "none", "artist": "", "title": "", "length": "100000", "status": "none"}`
+  `playerctl --ignore-player=firefox metadata --format '{"player": "{{playerName}}", "artist": "{{artist}}", "title": "{{trunc(markup_escape(title), 60)}}", "length": "{{mpris:length}}", "status": "{{status}}"}' -F `)
+(defvar player-loop "None")
+(defvar player-shuffle "Off")
+
+(defwidget media-header []
+  (box
+    :space-evenly false
+    :style "margin: 0 1em -0.2em 1em; ${debug}"
+    ; :class "bar-button"
+    (label 
+      :style "color: white; ${debug};"
+      :text "${player.artist} - ${player.title}")
+  )
+)
+
+(defwidget media-progress-bar []
+  (box
+    :class "progress-bar"
+    :halign "fill"
+    :orientation "h"
+    :space-evenly false
+    :style "margin-left: 0px; 
+           margin-right: ${mon_w[1] - round(mon_w[1] * player-position / player.length, 0)}"
+  )
+)
+
+(defwidget media-controller []
+  (box
+    :class "media-controller"
+    :halign "END"
+    :orientation "h"
+    :space-evenly false
+    :style "font-size: 1.5em; margin: 0 1em;"
+    (button
+      :class "bar-button media ${player-shuffle == "Off"? "inactive" : ""}"
+      :onclick "playerctl shuffle Toggle --ignore-player=firefox; 
+               eww update player-shuffle=$(playerctl shuffle --ignore-player=firefox)"
+      ;:visible {player.shuffle != "null"}
+      (label :text "󰒝"))
+    (button
+      :class "bar-button media ${player-loop == "None" ? "inactive" : ""}"
+      :onclick `
+        case $(playerctl loop) in 
+          'None') playerctl loop Track --ignore-player=firefox;;
+          'Track') playerctl loop Playlist --ignore-player=firefox;;
+          'Playlist') playerctl loop None --ignore-player=firefox;;
+        esac
+        eww update player-loop=$(playerctl loop --ignore-player=firefox)`
+      ;:visible {player.shuffle != "null"}
+      (label :text "${player-loop == "None" ? "󰑖" : (player-loop == "Track" ? "󰑘" : "󰑖")}"))
+    (button
+      :class "bar-button media"
+      :onclick "playerctl previous --ignore-player=firefox"
+      ;:active {player.canPrev}
+      (label :text "󰒮"));󰼨
+    (button
+      :class "bar-button media"
+      :onclick "playerctl play-pause --ignore-player=firefox"
+      ;:active {player.canPlay}
+      (label :text "${player.status == "Playing" ? "󰏤" : "󰐊"}" ));󰏦󰐍󰼛
+    (button
+      :class "bar-button media"
+      :onclick "playerctl next --ignore-player=firefox"
+      ;:active {player.canNext}
+      (label :text "󰒭"));󰼧
+  )
+)
+;=========================================================================================
+(defwidget bar1 []
+  (overlay
+    (box 
+      :class "bar ${show_overview ? 'active' : ''}" 
+      :orientation "horizontal" :halign "fill" :valign "fill"
+      :style "${debug}"
+    )
+    (media-progress-bar)
+    (centerbox
+      :style "font-size: 0.845em;"  ; due to some special reason.
+      (box
+        :space-evenly false
+        :style "${debug};"
+        (overview_button)
+        (separator)
+        (workspaces :monitor 1)
+        ; (separator)
+        ; (separator)
+      )
+      (box
+        ; :style "border: 1px solid white"
+        (media-header))
+      (box
+        ; :style "border: 1px solid white"
+        (media-controller)
+      )
+    )
+  )
+)

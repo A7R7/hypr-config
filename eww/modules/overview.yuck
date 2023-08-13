@@ -1,0 +1,103 @@
+(defvar show_overview false)
+(defvar scale 0.095)
+(defvar windows 
+  '[
+  [[],[],[],[],[],[],[],[],[],[],[]],
+  [[],[],[],[],[],[],[],[],[],[],[]],
+  [[],[],[],[],[],[],[],[],[],[],[]]
+  ]')
+
+(defwidget overview [mon_i]
+  (box
+    :space-evenly false :orientation "v" :valign "fill" :halign "fill"
+    :style "
+    ${debug};
+    ${show_overview ? '' : 'margin-top: 150px; margin-bottom: -150px'};
+    transition: 500ms cubic-bezier(0.05, 0.9, 0.1, 1.0); "
+    :class "overview"
+    ; (box
+    ;   :space-evenly false :valign "start" :halign "fill"
+    ;   :style "min-height: 20px; "
+    ; )
+    (box
+      :orientation "h" :halign "fill" :valign "fill"
+      :space-evenly true
+      (for i in ws_entry
+        (ws_wins :mon_i mon_i :ws_i i :list "${windows[mon_i][i]}")
+      )
+    )
+  )
+)
+
+(defwidget ws_wins [mon_i ws_i list]
+  (button
+    :onclick "hyprctl dispatch workspace ${mon_i * 10 + ws_i}"
+    (box
+      ; :halign "start" :valign "start"
+      :space-evenly false
+      :orientation "h"
+      :style " 
+            min-width: ${mon_w[mon_i] * scale}px;
+            min-height: ${mon_h[mon_i] * scale}px;
+            margin: 2px ${mon_w[mon_i] * (0.1 - scale)/2}px;
+            box-shadow: 0px 0px 3px 1px cyan;
+            border-radius: 12px;
+            "
+      :class "overview workspace"
+      (for win in list
+        (box
+          :style "margin: ${win.margin};
+                border: 2px solid white;
+                border-radius: 12px;
+                 "
+                ; background-size: auto auto;
+                ; background-image: url('.icons/${win.class}');
+          :class "overview window"
+          :orientation "v"
+          (overlay
+            (image
+              :path ".icons/${win.class}"
+              :image-width 35
+              :image-height 35
+            )
+            (label 
+              :text "${win.class}" 
+              :style "font-size: 16px; color: white; margin: 22 0 -22 0;"
+              :valign "baseline"
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+(defwidget overview_button []
+  (button 
+    :class "bar-button"
+    :onclick " ${show_overview ? 
+       '${EWW_CMD} update show_overview=false;
+        ${EWW_CMD} close overview0; ${EWW_CMD} close overview1; ${EWW_CMD} close overview2;' : 
+       '${EWW_CMD} open-many overview0 overview1 overview2;
+        ${EWW_CMD} update show_overview=true; node scripts/overview.js;
+      '
+    }"
+    :style " ${debug}; margin: 0 0.5em; padding: 0.4em"
+    (label
+      :halign "center" :valign "center"
+      :style "font-size: 1.4em; margin: -0.4em 0"
+      :text "󰾍"
+    )
+    ; (label 
+    ;   :class "bar-button overview ${show_overview ? "show" : "hide"}"
+    ;   :text "󰔶"
+    ;   :style "font-size: 1.5em;"
+    ; )
+    ; (image 
+    ;   :class "bar-button-2 overview ${show_overview ? "show" : "hide"}"
+    ;   :path "images/rankings.svg"
+    ;   :image-width 30
+    ;   :image-height 30
+    ; )
+  )
+)

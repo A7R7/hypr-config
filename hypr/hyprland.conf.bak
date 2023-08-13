@@ -1,0 +1,108 @@
+# global functions
+source=~/.config/hypr/configs/monitors.conf
+source=~/.config/hypr/configs/execonce.conf
+source=~/.config/hypr/configs/keybinds.conf
+source=~/.config/hypr/configs/rules.conf
+# source=~/.config/hypr/configs/proxy.conf
+# source = ~/.config/hypr/myColors.conf
+
+# For all categories, see https://wiki.hyprland.org/Configuring/Variables/
+input {
+  kb_layout = us
+    kb_variant =
+    kb_model =
+    kb_options = caps:escape,shift:both_capslock
+    kb_rules =
+
+    follow_mouse = 1
+
+    touchpad {
+      natural_scroll = true
+    }
+  sensitivity = 1 # -1.0 - 1.0, 0 means no modification.
+    repeat_rate = 28
+    repeat_delay = 400
+}
+
+general {
+# See https://wiki.hyprland.org/Configuring/Variables/ for more
+
+  gaps_in = 10 
+    gaps_out = 20
+    border_size = 4
+    col.active_border = rgba(33ccffee) rgba(00ff99ee) 45deg
+    col.inactive_border = rgba(24283be6)
+
+    layout = dwindle
+# layout = master
+}
+
+decoration {
+# See https://wiki.hyprland.org/Configuring/Variables/ for more
+  active_opacity=1.0
+    fullscreen_opacity=1.0
+    rounding = 11
+    multisample_edges=true
+
+#    blur = false
+ blur {
+    enabled	= false #enable kawase window background blur	bool	true
+    size = 8 #blur size (distance)	int	8
+    passes = 1 #the amount of passes to perform	int	1
+    ignore_opacity = false #make the blur layer ignore the opacity of the window	bool	false
+    new_optimizations = true #whether to enable further optimizations to the blur. Recommended to leave on, as it will massively improve performance.	bool	true
+    xray	= true #if enabled, floating windows will ignore tiled windows in their blur. Only available if blur_new_optimizations is true. Will reduce overhead on floating blur significantly.	bool	false
+    noise	= 0.0117 #how much noise to apply. 0.0 - 1.0	float	0.0117
+    contrast	= 0.8916 #contrast modulation for blur. 0.0 - 2.0	float	0.8916
+    brightness = 0.8172 #brightness modulation for blur. 0.0 - 2.0	float	0.8172
+  }
+ drop_shadow = true
+ shadow_range = 4
+ shadow_render_power = 3
+ col.shadow = rgba(1a1a1aee)
+}
+
+animations {
+  enabled = true
+# Some default animations, see https://wiki.hyprland.org/Configuring/Animations/ for more
+    bezier = myBezier, 0.05, 0.9, 0.1, 1.05
+    animation = windows, 1, 3, default
+    animation = windowsOut, 1, 4, default, popin 50%
+    animation = border, 1, 5, default
+    animation = borderangle, 1, 5, default
+    animation = fade, 1, 5, default
+    animation = workspaces, 1, 2, default
+    animation = specialWorkspace, 1, 2.5, default, slidevert
+    # animation = specialWorkspace, 1, 3, default, fade
+}
+
+dwindle {
+# See https://wiki.hyprland.org/Configuring/Dwindle-Layout/ for more
+  pseudotile = true # master switch for pseudotiling. Enabling is bound to mainMod + P in the keybinds section below
+    preserve_split = true # you probably want this
+}
+
+master {
+# See https://wiki.hyprland.org/Configuring/Master-Layout/ for more
+  new_is_master = true
+}
+
+gestures {
+# See https://wiki.hyprland.org/Configuring/Variables/ for more
+  workspace_swipe = true
+    workspace_swipe_fingers = 3;
+  workspace_swipe_distance = 2500;
+}
+
+# Example per-device config
+# See https://wiki.hyprland.org/Configuring/Keywords/#executing for more
+device:epic mouse V1 {
+         sensitivity = -0.5
+       }
+
+misc {
+  disable_hyprland_logo = true
+    disable_splash_rendering = true
+    vrr = 2
+}
+# source=~/.config/hypr/configs/hyprfocus.conf

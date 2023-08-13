@@ -1,0 +1,222 @@
+
+    "layer": "top",
+
+    "position": "top",
+    // If height property would be not present, it'd be calculated dynamically
+    "height": 20,
+    /* "margin-left":5, */
+    /* "margin-right":5, */
+    /* "margin-top":5, */
+    /* "margin-bottom":6, */
+    
+    "modules-left": [
+        /* "sway/workspaces", */
+        "custom/spaceleft",
+        "wlr/workspaces",
+        "custom/spaceright",
+        "hyprland/window",
+    ],
+    "modules-center": [
+    ],
+    "modules-right": [
+        "custom/asd2num",
+        "disk",
+        "network",
+        "cpu",
+        "memory",
+        //"temperature",
+        "pulseaudio",
+        "battery",
+        //"clock#date",
+        "clock#time",
+        "tray",
+    ],
+
+    "custom/spaceleft":{
+        //"format": "",
+        "format": "⭘",
+        "on-click": "wlogout",
+    },
+
+    "custom/spaceright":{
+        "format": "",
+        "on-click": "rofi -theme slate.rasi -show combi -show-icons",
+        
+    },
+
+    "custom/asd2num":{
+        "format": "{} ",
+        "exec" : "source /home/wadekiny/Scripts/keyd/asd2num_flag.txt && echo $_asd2num",
+        "interval":1,
+    },
+
+    "disk": {
+        "interval": 30,
+        "format": " {free}",
+        "path": "/"
+    },
+
+    "battery": {
+        "interval": 60,
+        "states": {
+            "warning": 30,
+            "critical": 15
+        },
+        // Connected to AC
+        /* "format": "  {icon}  {capacity}%", // Icon: bolt */
+        "format": " {capacity}%", // Icon: bolt
+
+        // Not connected to AC
+        "format-discharging": "{icon} {capacity}%",
+        "format-icons": [
+            /* "", // Icon: battery-full */
+            /* "", // Icon: battery-three-quarters */
+            /* "", // Icon: battery-half */
+            /* "", // Icon: battery-quarter */
+            /* ""  // Icon: battery-empty */
+            "",
+            "",
+            "",
+            "",
+            "",
+        ],
+        "tooltip": false
+    },
+
+    //"clock":{
+    //    "format": "{:%H:%M}  ",
+    //    "format-alt": "{:%A, %B %d, %Y (%R)}  ",
+    //    "tooltip-format": "<tt><small>{calendar}</small></tt>",
+    //    "calendar": {
+    //                "mode"          : "year",
+    //                "mode-mon-col"  : 3,
+    //                "weeks-pos"     : "right",
+    //                "on-scroll"     : 1,
+    //                "on-click-right": "mode",
+    //                "format": {
+    //                          "months":     "<span color='#ffead3'><b>{}</b></span>",
+    //                          "days":       "<span color='#ecc6d9'><b>{}</b></span>",
+    //                          "weeks":      "<span color='#99ffdd'><b>W{}</b></span>",
+    //                          "weekdays":   "<span color='#ffcc66'><b>{}</b></span>",
+    //                          "today":      "<span color='#ff6699'><b><u>{}</u></b></span>"
+    //                          }
+    //                }
+    //},
+
+    "clock#time": {
+        "interval": 1,
+        "format": "{:%H:%M:%S}",
+        "tooltip": false
+        //     
+    },
+    "clock#date": {
+      "interval": 60,
+      "format": "{:%e.%b.%Y}", // Icon: calendar-alt
+      "tooltip-format": "{:%e %B %Y}"
+    },
+
+    "cpu": {
+        "interval": 5,
+        /* "format": " {usage}% ({load})", // Icon: microchip */
+        "format": " {usage}%", // Icon: microchip
+        "states": {
+          "warning": 70,
+          "critical": 90
+        }
+    },
+
+    "memory": {
+        "interval": 5,
+        "format": " {}%", // Icon: memory
+        "states": {
+            "warning": 70,
+            "critical": 90
+        }
+    },
+
+    "network": {
+        "interval": 5,
+        //"format-wifi": "  {essid} ({signalStrength}%)", // Icon: wifi
+        "format-wifi": "直 {essid}", // Icon: wifi
+        "format-ethernet": "  {ifname}: {ipaddr}/{cidr}", // Icon: ethernet
+        "format-disconnected": "⚠ Disconnected",
+        "tooltip-format": "{ifname}: {ipaddr}"
+    },
+
+    "wlr/workspaces": {
+        "format":"{icon}",
+        "on-click": "activate",
+        "format-icons":{
+            /* "1":"", */
+            /* "2":"", */
+            /* "3":"", */
+            /* "4":"", */
+            /* "5":"", */
+            /* "6":"", */
+            /* "7":"", */
+            /* "8":"", */
+            /* "9":"", */
+            /* "10":"", */
+            /* "11":"", */
+            /* "12":"", */
+            /* "13":"", */
+            /* "14":"ﬄ", */
+            /* "15":"﬐", */
+
+            /*      */
+            "1":"",
+            "2":"",
+            "3":"",
+            "4":"",
+            "5":"",
+            "6":"",
+            "7":"",
+            "8":"",
+            "9":"",
+            "10":"",
+            "11":"",
+            "12":"",
+            "13":"ﱘ",
+            "14":"ﬄ",
+            "15":"﬐",
+            "16":"",
+            "default": "",
+        },
+        "sort-by-number":true
+    },
+    "pulseaudio": {
+        "format": "{icon} {volume}",
+        "format-alt": "{icon} {volume}",
+        "format-alt-click": "click-right",
+        "format-muted": "婢",
+        "format-icons": {
+            "phone": ["", "", "", ""],
+            "default": ["", "", "", ""]
+        },
+        "scroll-step": 5,
+        "on-click": "pavucontrol",
+        "tooltip": false
+    },
+
+    "temperature": {
+      "critical-threshold": 80,
+      "interval": 5,
+      "format": "{icon} {temperatureC}°C",
+      "format-icons": [
+          "", // Icon: temperature-empty
+          "", // Icon: temperature-quarter
+          "", // Icon: temperature-half
+          "", // Icon: temperature-three-quarters
+          ""  // Icon: temperature-full
+      ],
+      "tooltip": true
+    },
+
+    "tray": {
+        "icon-size": 20,
+        "spacing": 7,
+    }
+        
+}
+
+

@@ -1,0 +1,85 @@
+(defvar debug "")
+; (defvar debug "box-shadow: 0 0 0 1px white;")
+; (defvar debug "border: 1px solid white;")
+(defwidget slide-n-fade [direction bool]
+  (revealer
+    :transition "slide${direction}"
+    :reveal bool
+    (revealer
+      :transition "crossfade"
+      :reveal bool
+      (children)
+    )
+  )
+)
+(defwidget separator []
+  (label :text "┃")
+)
+
+(deflisten cycle-1 :initial 0
+  ` while true; do echo 0; sleep 1; echo 1; sleep 1; done `
+)
+(deflisten cycle-5 :initial 0
+  'while true; do echo 0; sleep 5; echo 1; sleep 5; done'
+)
+(deflisten cycle-6 :initial 0
+  'while true; do echo 0; sleep 6; echo 1; sleep 6; done'
+)
+
+(defvar ws_entry "[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]")
+(defvar mon_w '["2520", "1024", "2560"]')
+(defvar mon_h '["1680", "1280", "1440"]')
+
+(include "./modules/workspaces.yuck")
+(include "./modules/overview.yuck")
+(include "./modules/bar0.yuck")
+(include "./modules/bar1.yuck")
+(include "./modules/bar2.yuck")
+
+(defwindow bar0
+  :monitor 0
+  :stacking "bg"
+  :exclusive true
+  :windowtype "dock"
+  :geometry (geometry :x "0%" :y "0px" :width "100%" :height "3%" :anchor "bottom center")
+  (bar0)
+)
+
+(defwindow bar1
+  :monitor 1
+  :stacking "bg"
+  :exclusive true
+  :windowtype "dock"
+  :geometry (geometry :x "0%" :y "0px" :width "100%" :height "3%" :anchor "bottom center")
+  (bar1)
+)
+(defwindow bar2
+  :monitor 2
+  :stacking "bg"
+  :exclusive true
+  :windowtype "dock"
+  :geometry (geometry :x "0%" :y "0px" :width "100%" :height "3%" :anchor "bottom center")
+  (bar2)
+)
+
+(defwindow overview0
+  :monitor 0
+  :stacking "fg"
+  :exclusive false
+  :geometry (geometry :x "0%" :y "0%" :width "100%" :height "11%" :anchor "bottom center")
+  (overview :mon_i 0)
+)
+(defwindow overview1
+  :monitor 1
+  :stacking "fg"
+  :exclusive false
+  :geometry (geometry :x "0%" :y "0%" :width "100%" :height "11%" :anchor "bottom center")
+  (overview :mon_i 1)
+)
+(defwindow overview2
+  :monitor 2
+  :stacking "fg"
+  :exclusive false
+  :geometry (geometry :x "0%" :y "0%" :width "100%" :height "11%" :anchor "bottom center")
+  (overview :mon_i 2)
+)

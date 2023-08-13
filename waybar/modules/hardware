@@ -1,0 +1,73 @@
+{
+  "battery": {
+    "interval": 60,
+    "states": {
+      "warning": 30,
+      "critical": 15
+    },
+    // Connected to AC
+    "format": " {capacity}%", 
+
+    // Not connected to AC
+    "format-discharging": "{icon} {capacity}%",
+    "format-icons": [ "", "", "", "", "", ],
+    "tooltip": false
+  },
+
+  "temperature": {
+    "critical-threshold": 80,
+    "interval": 5,
+    "format": "{icon} {temperatureC}°C",
+    "format-icons": [ "", "", "", "", "" ],
+    "tooltip": true
+  },
+  "pulseaudio": {
+    "format": "{icon} {volume}",
+    "format-alt": "{icon} {volume}",
+    "format-alt-click": "click-right",
+    "format-muted": "婢",
+    "format-icons": {
+      "phone": ["", "", "", ""],
+      "default": ["", "", "墳", ""]
+    },
+    "scroll-step": 5,
+    "on-click": "pavucontrol",
+    "tooltip": false
+  },
+
+  "disk": {
+    "interval": 30,
+    "format": " {free}",
+    "path": "/",
+    "on-click":"nautilus"
+  },
+
+  "cpu": {
+    "interval": 5,
+    /* "format": " {usage}% ({load})", // Icon: microchip */
+    "format": " {usage}%", // Icon: microchip
+    "states": {
+      "warning": 70,
+      "critical": 90
+    },
+    "on-click":"alacritty -t 'btop' -e btop",
+  },
+
+  "memory": {
+    "interval": 5,
+    "format": " {}%", // Icon: memory
+    "states": {
+      "warning": 70,
+      "critical": 90
+    },
+    "on-click":"alacritty -t 'btop' -e btop",
+  },
+
+  "network": {
+    "interval": 5,
+    "format-wifi": "直 {essid}", // Icon: wifi
+    // "format-ethernet": " {ifname}: {ipaddr}/{cidr}", // Icon: ethernet
+    "format-disconnected": " Disconnected",//
+    "tooltip-format": "{ifname}: {ipaddr}"
+  },
+}
