@@ -522,11 +522,14 @@ animations {
 * Pyprland
 
 Pyprland hosts process for multiple Hyprland plugins.
+
+First let's launch pyprland on startup.
 #+begin_src conf
   exec-once = pypr
 #+end_src
 
-#+begin_src json
+Pyprland's core configuration goes to =~/.config/hypr/pyprland.json=
+#+begin_src json :noweb yes
   {
     "pyprland": {
       "plugins": [
@@ -534,34 +537,28 @@ Pyprland hosts process for multiple Hyprland plugins.
       ]
     },
     "scratchpads": {
-      "term": {
-        "command": "kitty --class kitty-dropterm",
-        "animation": "fromTop",
-        "lazy": true
-      },
-      "clash": {
-        "command": "clash-verge",
-        "animation": "fromTop",
-        "unfocus": "hide",
-        "lazy": true
-      },
-      "volume": {
-        "command": "pavucontrol",
-        "animation": "fromRight",
-        "unfocus": "hide",
-        "lazy": true
-      },
-      "network": {
-        "command": "nm-connection-editor",
-        "animation": "fromBottom",
-        "unfocus": "hide",
+      <<scratchpads>>
+      "placeholder": {
+        "command": ""
         "lazy": true
       }
     }
   }
 #+end_src
 
- * Kitty-dropterm
+** Scratchpads
+  :PROPERTIES:
+  :header-args:json: :noweb-ref scratchpads
+  :END:
+  
+*** Kitty-dropterm
+#+begin_src json
+  "term": {
+    "command": "kitty --class kitty-dropterm",
+    "animation": "fromTop",
+    "lazy": true
+  },
+#+end_src
 #+begin_src conf
   bind = $mainMod, F1, exec, pypr toggle term
   $dropterm  = ^(kitty-dropterm)$
@@ -570,7 +567,15 @@ Pyprland hosts process for multiple Hyprland plugins.
   windowrule = size 75% 60%,$dropterm
 #+end_src
 
- * Pavucontrol
+*** Pavucontrol
+#+begin_src json
+  "volume": {
+    "command": "pavucontrol",
+    "animation": "fromRight",
+    "unfocus": "hide",
+    "lazy": true
+  },
+#+end_src
 #+begin_src conf
   bind = $mainMod, F5, exec, pypr toggle volume
   windowrule = float,^(pavucontrol)$
@@ -578,17 +583,48 @@ Pyprland hosts process for multiple Hyprland plugins.
   windowrule = size 25% 25%,^(pavucontrol)$
 #+end_src
 
- * Clash-Verge
- #+begin_src conf
-   bind = $mainMod, F4, exec, pypr toggle clash
-   windowrule = float, ^(clash-verge)$
-   windowrule = workspace special silent, ^(clash-verge)$
-   windowrule = size 60% 60%,^(clash-verge)$
+*** Network
+ * Network-manager
+ #+begin_src json
+   "network": {
+     "command": "nm-connection-editor",
+     "animation": "fromRight",
+     "lazy": true
+   },
  #+end_src
-
- * Network
  #+begin_src conf
    bind = $mainMod, F9, exec, pypr toggle network
    windowrule = float, ^(nm-connection-editor)
    windowrule = workspace special silent, ^(nm-connection-editor)$
+   windowrule = size 18% 40%,^(nm-connection-editor)$
+ #+end_src
+
+ * Bluetooth
+ #+begin_src json
+   "bluetooth": {
+     "command": "blueman-manager",
+     "animation": "fromLeft",
+     "lazy": true
+   },
+ #+end_src
+ #+begin_src conf
+   bind = $mainMod, F9, exec, pypr toggle bluetooth
+   windowrule = float, ^(blueman-manager)
+   windowrule = workspace special silent, ^(blueman-manager)$
+   windowrule = size 18% 40%,^(blueman-manager)$
+ #+end_src
+
+ * Clash-Verge
+ #+begin_src json
+   "clash": {
+     "command": "clash-verge",
+     "animation": "fromTop",
+     "lazy": true
+   },
+ #+end_src
+ #+begin_src conf
+   bind = $mainMod, F9, exec, pypr toggle clash
+   windowrule = float, ^(clash-verge)$
+   windowrule = workspace special silent, ^(clash-verge)$
+   windowrule = size 50% 50%,^(clash-verge)$
  #+end_src

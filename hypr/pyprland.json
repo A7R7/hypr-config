@@ -10,12 +10,6 @@
       "animation": "fromTop",
       "lazy": true
     },
-    "clash": {
-      "command": "clash-verge",
-      "animation": "fromTop",
-      "unfocus": "hide",
-      "lazy": true
-    },
     "volume": {
       "command": "pavucontrol",
       "animation": "fromRight",
@@ -24,8 +18,21 @@
     },
     "network": {
       "command": "nm-connection-editor",
-      "animation": "fromBottom",
-      "unfocus": "hide",
+      "animation": "fromRight",
+      "lazy": true
+    },
+    "bluetooth": {
+      "command": "blueman-manager",
+      "animation": "fromLeft",
+      "lazy": true
+    },
+    "clash": {
+      "command": "clash-verge",
+      "animation": "fromTop",
+      "lazy": true
+    },
+    "placeholder": {
+      "command": ""
       "lazy": true
     }
   }
