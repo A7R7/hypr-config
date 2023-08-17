@@ -1,13 +1,50 @@
 {
   "pyprland": {
     "plugins": [
-      "scratchpads"
+      "scratchpads",
+      "lost_windows"
     ]
   },
   "scratchpads": {
     "term": {
       "command": "kitty --class kitty-dropterm",
       "animation": "fromTop",
+      "lazy": true
+    },
+    "files": {
+      "command": "thunar",
+      "animation": "fromTop",
+      "lazy": true
+    },
+    "dict": {
+      "command": "goldendict",
+      "animation": "fromTop",
+      "lazy": true
+    },
+    "tty-clock": {
+      "command": "kitty --class kitty-tty-clock tty-clock -cs",
+      "animation": "fromTop",
+      "lazy": true
+    },
+    "cava": {
+      "command": "kitty --class kitty-cava cava",
+      "animation": "fromBottom",
+      "lazy": true
+    },
+    "pipes": {
+      "command": "kitty --class kitty-pipes pipes",
+      "animation": "fromLeft",
+      "lazy": true
+    },
+    "cmatrix": {
+      "command": "kitty --class kitty-cmatrix cmatrix",
+      "animation": "fromRight",
+      "lazy": true
+    },
+    "music": {
+      "command": "tauon",
+      "animation": "fromTop",
+      "unfocus": "hide",
       "lazy": true
     },
     "volume": {
@@ -29,10 +66,10 @@
     "clash": {
       "command": "clash-verge",
       "animation": "fromTop",
-      "lazy": true
+      "lazy": false
     },
     "placeholder": {
-      "command": ""
+      "command": "",
       "lazy": true
     }
   }

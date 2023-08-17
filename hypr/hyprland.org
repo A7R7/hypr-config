@@ -389,18 +389,18 @@ Execute a shell script on startup of the compositor or on each time it's reloade
   #  Special workspace{{{
   #  hide a showing specialWorkspace
   bind = $mainMod, escape, execr, hyprctl dispatch togglespecialworkspace $specialWorkspaceId
-  bind = $mainMod, F1,  togglespecialworkspace, 1
-  bind = $mainMod, F2,  togglespecialworkspace, 2
-  bind = $mainMod, F3,  togglespecialworkspace, 3
-  bind = $mainMod, F4,  togglespecialworkspace, 4
-  bind = $mainMod, F5,  togglespecialworkspace, 5
-  bind = $mainMod, F6,  togglespecialworkspace, 6
-  bind = $mainMod, F7,  togglespecialworkspace, 7
-  bind = $mainMod, F8,  togglespecialworkspace, 8
-  bind = $mainMod, F9,  togglespecialworkspace, 9 
-  bind = $mainMod, F10, togglespecialworkspace, 10 
-  bind = $mainMod, F11, togglespecialworkspace, 11 
-  bind = $mainMod, F12, togglespecialworkspace, 12 
+  # bind = $mainMod, F1,  togglespecialworkspace, 1
+  # bind = $mainMod, F2,  togglespecialworkspace, 2
+  # bind = $mainMod, F3,  togglespecialworkspace, 3
+  # bind = $mainMod, F4,  togglespecialworkspace, 4
+  # bind = $mainMod, F5,  togglespecialworkspace, 5
+  # bind = $mainMod, F6,  togglespecialworkspace, 6
+  # bind = $mainMod, F7,  togglespecialworkspace, 7
+  # bind = $mainMod, F8,  togglespecialworkspace, 8
+  # bind = $mainMod, F9,  togglespecialworkspace, 9 
+  # bind = $mainMod, F10, togglespecialworkspace, 10 
+  # bind = $mainMod, F11, togglespecialworkspace, 11 
+  # bind = $mainMod, F12, togglespecialworkspace, 12 
   #}}}
 
   #}}}1
@@ -523,6 +523,7 @@ animations {
 
 Pyprland hosts process for multiple Hyprland plugins.
 
+** Core
 First let's launch pyprland on startup.
 #+begin_src conf
   exec-once = pypr
@@ -533,13 +534,14 @@ Pyprland's core configuration goes to =~/.config/hypr/pyprland.json=
   {
     "pyprland": {
       "plugins": [
-        "scratchpads"
+        "scratchpads",
+        "lost_windows"
       ]
     },
     "scratchpads": {
       <<scratchpads>>
       "placeholder": {
-        "command": ""
+        "command": "",
         "lazy": true
       }
     }
@@ -551,7 +553,7 @@ Pyprland's core configuration goes to =~/.config/hypr/pyprland.json=
   :header-args:json: :noweb-ref scratchpads
   :END:
   
-*** Kitty-dropterm
+*** Dropterm
 #+begin_src json
   "term": {
     "command": "kitty --class kitty-dropterm",
@@ -567,7 +569,115 @@ Pyprland's core configuration goes to =~/.config/hypr/pyprland.json=
   windowrule = size 75% 60%,$dropterm
 #+end_src
 
+*** File-manager
+#+begin_src json
+  "files": {
+    "command": "thunar",
+    "animation": "fromTop",
+    "lazy": true
+  },
+#+end_src
+#+begin_src conf
+  bind = $mainMod, F2, exec, pypr toggle files
+  windowrule = float,^(thunar)$
+  windowrule = workspace special silent,^(thunar)$
+  windowrule = size 75% 60%,^(thunar)$
+#+end_src
+*** Dict
+#+begin_src json
+  "dict": {
+    "command": "goldendict",
+    "animation": "fromTop",
+    "lazy": true
+  },
+#+end_src
+#+begin_src conf
+  bind = $mainMod, F3, exec, pypr toggle dict
+  windowrule = float,^(GoldenDict)$
+  windowrule = workspace special silent,^(GoldenDict)$
+  windowrule = size 75% 60%,^(GoldenDict)$
+#+end_src
+*** Fancy-Terms
+
+#+begin_src conf
+  bind = $mainMod, F4, exec, pypr toggle pipes; sleep 0.07; pypr toggle cava;
+  bind = $mainMod, F4, exec, pypr toggle cmatrix; sleep 0.07; pypr toggle tty-clock
+#+end_src
+ * tty-clock
+#+begin_src json 
+  "tty-clock": {
+    "command": "kitty --class kitty-tty-clock tty-clock -cs",
+    "animation": "fromTop",
+    "lazy": true
+  },
+#+end_src
+#+begin_src conf
+  windowrule = float, ^(kitty-tty-clock)$
+  windowrule = workspace special silent, ^(kitty-tty-clock)$
+  windowrule = size 40% 45%, ^(kitty-tty-clock)$
+#+end_src
+
+ * cava
+#+begin_src json
+  "cava": {
+    "command": "kitty --class kitty-cava cava",
+    "animation": "fromBottom",
+    "lazy": true
+  },
+#+end_src
+#+begin_src conf
+  windowrule = float, ^(kitty-cava)$
+  windowrule = workspace special silent, ^(kitty-cava)$
+  windowrule = size 40% 45%, ^(kitty-cava)$
+#+end_src
+
+ * Pipes
+#+begin_src json
+  "pipes": {
+    "command": "kitty --class kitty-pipes pipes",
+    "animation": "fromLeft",
+    "lazy": true
+  },
+#+end_src
+#+begin_src conf
+  windowrule = float, ^(kitty-pipes)$
+  windowrule = workspace special silent, ^(kitty-pipes)$
+  windowrule = size 25% 60%, ^(kitty-pipes)$
+#+end_src
+
+ * CMatrix
+#+begin_src json
+  "cmatrix": {
+    "command": "kitty --class kitty-cmatrix cmatrix",
+    "animation": "fromRight",
+    "lazy": true
+  },
+#+end_src
+#+begin_src conf
+  windowrule = float, ^(kitty-cmatrix)$
+  windowrule = workspace special silent, ^(kitty-cmatrix)$
+  windowrule = size 25% 60%, ^(kitty-cmatrix)$
+#+end_src
+*** Music 
+
+Toggle tauon music box from top of the screen.
+#+begin_src json
+  "music": {
+    "command": "tauon",
+    "animation": "fromTop",
+    "unfocus": "hide",
+    "lazy": true
+  },
+#+end_src
+#+begin_src conf :tangle no
+  bind = $mainMod, F5, exec, pypr toggle music
+  windowrule = float,^(tauonmb)$
+  windowrule = workspace special,^(tauonmb)$
+  windowrule = size 50% 50%,^(tauonmb)$
+#+end_src
 *** Pavucontrol
+
+Toggle pavucontrol from right of the screen.
 #+begin_src json
   "volume": {
     "command": "pavucontrol",
@@ -584,6 +694,10 @@ Pyprland's core configuration goes to =~/.config/hypr/pyprland.json=
 #+end_src
 
 *** Network
+
+Toggle network-manager from right, bluetooth-manager from left, 
+and clash-verge from top.
+
  * Network-manager
  #+begin_src json
    "network": {
@@ -594,8 +708,8 @@ Pyprland's core configuration goes to =~/.config/hypr/pyprland.json=
  #+end_src
  #+begin_src conf
    bind = $mainMod, F9, exec, pypr toggle network
-   windowrule = float, ^(nm-connection-editor)
-   windowrule = workspace special silent, ^(nm-connection-editor)$
+   windowrule = float, ^(nm-connection-editor)$
+   windowrulev2 = workspace special silent, class:^(nm-connection-editor)$, title:^(Network Connections)$
    windowrule = size 18% 40%,^(nm-connection-editor)$
  #+end_src
 
@@ -619,7 +733,7 @@ Pyprland's core configuration goes to =~/.config/hypr/pyprland.json=
    "clash": {
      "command": "clash-verge",
      "animation": "fromTop",
-     "lazy": true
+     "lazy": false
    },
  #+end_src
  #+begin_src conf
@@ -628,3 +742,8 @@ Pyprland's core configuration goes to =~/.config/hypr/pyprland.json=
    windowrule = workspace special silent, ^(clash-verge)$
    windowrule = size 50% 50%,^(clash-verge)$
  #+end_src
+
+
+** Lost Windows
+#+begin_src 
+#+end_src
