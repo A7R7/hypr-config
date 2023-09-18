@@ -1,14 +1,33 @@
+:DOC-CONFIG:
+#+PROPERTY: header-args:conf :tangle hyprland.conf :language conf :comments link
+#+PROPERTY: header-args:json :tangle pyprland.json :language json
+#+STARTUP: fold
+#+auto_tangle: t
+
+#+HUGO_BUNDLE: hyprland-configuration
+#+EXPORT_FILE_NAME: index.en
+#+HUGO_PUBLISHDATE: 2023-09-15
+#+HUGO_FRONT_MATTER_KEY_REPLACE: author>authors
+#+HUGO_CUSTOM_FRONT_MATTER: :featuredImage hyprland.png
+#+FILETAGS: :Hyprland:Org-mode:
+:END:
 #+TITLE: Hyprland Configuration
 #+AUTHOR: A7R7
-:DOC-CONFIG:
-# Tangle by default to init.el, which is the most common case
-#+PROPERTY: header-args:conf :tangle hyprland.conf :language conf
-#+PROPERTY: header-args:json :tangle pyprland.json :language json
-#+PROPERTY: header-args:mkdirp yes :comments no
-#+STARTUP: fold
-#+OPTIONS: toc:2
-#+auto_tangle: t
-:END:
+#+DESCRIPTION: My literate config for Hyprland, a dynamic tilling window manager
+#+HTML:<!--more-->
+
+* Introduction
+This is my hyprland literate configuration. 
+Codes from hyprland.conf, pyprland.json, etc are generated from this org file,
+by running =M-x org-babel-tangle= in your emacs.
+
+It's generally not recommended to edit codes in those files. 
+But if you have to, don't forget to run =M-x org-babel-detangle= to update codes blocks in this org file. Also, be careful not to edit comments like those in those generated files.
+#+begin_src example
+# [[file:hyprland.org::*Input][Input:1]]
+# Input:1 ends here
+#+end_src
+They are essential to =M-x org-babel-detangle=.
 
 * Variables
 
@@ -132,40 +151,16 @@ Keywords are not variables, but “commands” for more advanced configuring.
 ALL arguments separated by a comma, if you want to leave one of them empty, you cannot reduce the number of commas
 
 ** Monitors
+My monitor information are secrets.
 #+begin_src conf
-  $M1=Dell Inc. DELL P190S
-  $M2=Philips Consumer Electronics Company PHL24E1N5600
-  $M3=BOE 0x092F
-
-  $port1=eDP-1
-  $port2=DP-1
-  $port3=DP-2
-  $port4=HDMI-A-1
-
-  $screen1=$port4
-  $screen2=$port3
-  $screen3=$port1
-
-  # monitor=$screen1,1280x1024@60Hz,0x0,1
-  # monitor=$screen2,2560x1440@75Hz,1280x0,1
-  # monitor=$screen3,2520x1680@60Hz,3840x0,1
-
-  monitor=$screen1,1280x1024@60Hz,0x0,1, transform, 1
-  monitor=$screen2,2560x1440@75Hz,1024x0,1
-  monitor=$screen3,2520x1680@60Hz,3584x0,1
-
-  # monitor=$screen3,2520x1680@60Hz,0x0,1
-
-  workspace = $screen3, 1
-  workspace = $screen1, 11
-  workspace = $screen2, 21
+  source=~/.config/hypr/monitor.conf
 #+end_src
 
 ** Executes 
 
 Execute a shell script on startup of the compositor or on each time it's reloaded.
-- exec-once=command :: will execute only on launch
-- exec=command :: will execute on each reload
+- =exec-once=command= :: will execute only on launch
+- =exec=command= :: will execute on each reload
 #+begin_src conf 
   # exec-once = dbus-update-activation-environment --all
   exec-once = /usr/bin/gnome-keyring-daemon --start --components=secrets
@@ -220,7 +215,7 @@ Execute a shell script on startup of the compositor or on each time it's reloade
 
  * Grimblast
 #+begin_src conf
-  bind=,Print,execr, grimblast --notify --cursor copysave area
+  bind=,Print,execr, grimblast --notify --cursor copysave area $(xdg-user-dir PICTURES)/$(date +'%Y-%m-%d-%H-%M-%S_1.png')
   bind=SUPER,Print,exec,grimblast --notify save output $(xdg-user-dir PICTURES)/Screenshots/$(date +'%Y%m%d%H%M%S_1.png')
   bind=SUPERSHIFT,Print,exec,grimblast save output - | swappy -f -
 #+end_src
@@ -433,7 +428,7 @@ Execute a shell script on startup of the compositor or on each time it's reloade
 #+end_src
 
 ** Window rules
-
+*** Floats
 #+begin_src conf
 # floats
 windowrule = float, ^(Rofi)$
@@ -456,12 +451,16 @@ windowrule = float, ^(hmcl)$
 windowrulev2 = float, class:^(thunar)$,title:^(?!.* - Thunar$).*$
 windowrule = float, ^(org.fcitx.fcitx5-config-qt)
 windowrule = float, ^(file-roller)$
+#+end_src
 
+*** VLC
+#+begin_src conf
 windowrulev2 = float, class:^(vlc)$,title:^(Adjustments and Effects — VLC media player)$
 windowrulev2 = float, class:^(vlc)$,title:^(Simple Preferences — VLC media player)$
+#+end_src
 
-windowrulev2 = float, class:^(Vivaldi-stable)$, mapped:1
-
+*** Emacs
+#+begin_src conf
 # emacs
 ## ediff
 windowrulev2 = float, class:^(Emacs)$,title:^(Ediff)$
@@ -470,34 +469,37 @@ windowrulev2 = noborder, class:^(Emacs)$,title:^(Ediff)$
 windowrulev2 = float, class:^(emacs)$,title:^( \*Minibuf-\d+\*)$
 windowrulev2 = noborder, class:^(emacs)$,title:^( \*Minibuf-\d+\*)$
 ## eaf.py
-windowrule = float, title:eaf.py*
-windowrule = noanim, title:eaf.py*
-windowrule = nofocus, title:eaf.py*
+windowrule = float, class:^(python3)$, title:^(eaf.py)$
+windowrule = noanim, class:^(python3)$, title:^(eaf.py)$
+windowrule = nofocus, class:^(python3)$, title:^(eaf.py)$
 ## holo_layer
 windowrulev2 = float, class:^(python3)$, title:^(holo_layer.py)$
 windowrulev2 = nofocus, class:^(python3)$, title:^(holo_layer.py)$
 windowrulev2 = noanim, class:^(python3)$, title:^(holo_layer.py)$
+#+end_src
 
+*** Steam
+Steam has a friend list window. By default when opening friends list, it will be tiled together with steam, which isn't nice. Adding this rule makes Friends list float.
+#+begin_src conf
+# windowrulev2 = float, class:^(steam)$, title:^(Friends List)
+#+end_src
+
+*** Bitwig Studio
+Bigwig Studio is a music production studio. It has buttons that are dragable. When dragging those buttons, a tiny tooltip window will float above the button showing its current value. 
+
+However, on hyprland, when dragging those buttons, this tooltip window will be auto focused, which then lead to bitwig's window losing its focus, and the drag action failing to be recognized. Thus the button appears to be undragable.
+
+The tooltip window's class is "", and it's floating. Therefore adding the following rule fixed this issue. From my experience so far, this do not break anything else.
+#+begin_src conf
+windowrulev2 = noinitialfocus, class:^()$, floating:1
+#+end_src
+
+*** ETC
+#+begin_src conf
 # bluetooth
 windowrule = float, ^(blueberry.py)$
 windowrulev2 = float, class:^(blueman-manager)$, title: ^(Bluetooth Devices)$
-
-# tiles
-windowrule = tile, neovide
-windowrulev2 = tile, class:^(wps)$, title: - Writer$ 
-
-# xwayland floating window
-windowrulev2 = rounding 0, xwayland:1, floating:1, title:^(?!QQ$|Vivaldi Settings$)
-windowrulev2 = noinitialfocus, xwayland:1
-
-# deadd
-windowrulev2 = noinitialfocus, class:^(deadd-notification-center)$
-windowrulev2 = noborder, class:^(deadd-notification-center)$
-windowrulev2 = noborder, class:^(deadd-notification-center)$
-
-layerrule = blur, rofi
 #+end_src
-
 ** Workspace Rules
 Currently I have no workspace rules.
 
@@ -552,7 +554,6 @@ Pyprland's core configuration goes to =~/.config/hypr/pyprland.json=
   :PROPERTIES:
   :header-args:json: :noweb-ref scratchpads
   :END:
-  
 *** Dropterm
 #+begin_src json
   "term": {
@@ -577,7 +578,7 @@ Pyprland's core configuration goes to =~/.config/hypr/pyprland.json=
     "lazy": true
   },
 #+end_src
-#+begin_src conf
+#+begin_src conf :tangle no
   bind = $mainMod, F2, exec, pypr toggle files
   windowrule = float,^(thunar)$
   windowrule = workspace special silent,^(thunar)$
@@ -742,8 +743,7 @@ and clash-verge from top.
    windowrule = workspace special silent, ^(clash-verge)$
    windowrule = size 50% 50%,^(clash-verge)$
  #+end_src
-
-
+ 
 ** Lost Windows
 #+begin_src 
 #+end_src
