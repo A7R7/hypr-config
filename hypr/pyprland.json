@@ -12,7 +12,7 @@
       "lazy": true
     },
     "files": {
-      "command": "thunar",
+      "command": "nautilus",
       "animation": "fromTop",
       "lazy": true
     },
