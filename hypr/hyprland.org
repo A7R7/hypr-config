@@ -5,7 +5,7 @@
 #+auto_tangle: t
 
 #+HUGO_BUNDLE: hyprland-configuration
-#+EXPORT_FILE_NAME: index.en
+#+EXPORT_FILE_NAME: index.en.md
 #+HUGO_PUBLISHDATE: 2023-09-15
 #+HUGO_FRONT_MATTER_KEY_REPLACE: author>authors
 #+HUGO_CUSTOM_FRONT_MATTER: :featuredImage hyprland.png
@@ -467,7 +467,15 @@ windowrulev2 = float, class:^(thunar)$,title:^(?!.* - Thunar$).*$
 windowrule = float, ^(org.fcitx.fcitx5-config-qt)
 windowrule = float, ^(file-roller)$
 #+end_src
+*** X Menus
+Some xwayland window's menu have a dim black border by default. However hyprland applys a corner rounding to it by cutting off its 4 corners, making the corner having no border, which looks strange.
 
+These menus have no class (class=""). So the following rule can disable the corner rounding for them. 
+#+begin_src conf
+  windowrulev2 = rounding 0, class:^()$, floating:1, xwayland:1
+  windowrulev2 = rounding 0, class:^(GoldenDict-ng)$, floating:1, xwayland:1
+
+#+end_src
 *** VLC
 #+begin_src conf
 windowrulev2 = float, class:^(vlc)$,title:^(Adjustments and Effects — VLC media player)$
@@ -607,7 +615,7 @@ All the following json codes are tangled under the  "=scratchpads=" variable in 
     "lazy": true
   },
 #+end_src
-#+begin_src conf
+#+begin_src conf :tangle no
   bind = $mainMod, F2, exec, pypr toggle files
   windowrule = float, ^(org.gnome.Nautilus)$
   windowrule = workspace special silent,^(org.gnome.Nautilus)$
@@ -621,11 +629,11 @@ All the following json codes are tangled under the  "=scratchpads=" variable in 
     "lazy": true
   },
 #+end_src
-#+begin_src conf
+#+begin_src conf :tangle no
   bind = $mainMod, F3, exec, pypr toggle dict
-  windowrule = float,^(GoldenDict)$
-  windowrule = workspace special silent,^(GoldenDict)$
-  windowrule = size 75% 60%,^(GoldenDict)$
+  windowrulev2 = float, class:^(GoldenDict)$
+  windowrulev2 = workspace special silent, class:^(GoldenDict)$
+  windowrulev2 = size 75% 60%, class:^(GoldenDict)$
 #+end_src
 *** Fancy-Terms
 
