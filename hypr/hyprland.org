@@ -218,7 +218,8 @@ Execute a shell script on startup of the compositor or on each time it's reloade
   # applications
   bind = $mainMod, Return, exec, kitty --single-instance
   bind = $mainMod, E, exec, thunar
-  bind = $mainMod, B, exec, vivaldi-stable
+  bind = $mainMod, B, exec, vivaldi-stable --enable-features=UseOzonePlatform --ozone-platform=wayland --enable-wayland-ime %U
+
   bind = $mainMod, N, exec, neovide --multigrid
   bind = $mainMod, M, exec, emacs
 
