@@ -1,0 +1,58 @@
+[pyprland]
+plugins = ["scratchpads"]
+
+[scratchpads.term]
+command = "kitty --class kitty-scratch-term"
+class = "kitty-scratch-term"
+animation = "fromRight"
+lazy = false
+size = "45% 90%"
+
+[scratchpads.tty-clock]
+command = "kitty --class kitty-tty-clock tty-clock -cs"
+class = "kitty-tty-clock"
+animation = "fromTop"
+lazy = true
+size = "40% 45%"
+
+[scratchpads.cava]
+command = "kitty --class kitty-cava cava"
+class = "kitty-cava"
+animation = "fromBottom"
+lazy = true
+size = "40% 45%"
+
+[scratchpads.pipes]
+command = "kitty --class kitty-pipes pipes-rs"
+class = "kitty-pipes"
+animation = "fromLeft"
+lazy = true
+size = "25% 60%"
+
+[scratchpads.cmatrix]
+command = "kitty --class kitty-cmatrix cmatrix"
+class = "kitty-cmatrix"
+animation = "fromRight"
+lazy = true
+size = "25% 60%"
+
+[scratchpads.files]
+command = "nemo"
+class = "nemo"
+animation = "fromLeft"
+lazy = false
+size = "45% 90%"
+
+[scratchpads.tauon]
+command = "tauon"
+class = "tauonmb"
+animation = "fromTop"
+lazy = true
+size = "80% 80%"
+
+[scratchpads.clash-verge]
+command = "clash-verge"
+class = "clash-verge"
+animation = "fromTop"
+lazy = false
+size = "50% 50%"

@@ -1,6 +1,6 @@
 :DOC-CONFIG:
-#+PROPERTY: header-args:conf :tangle hyprland.conf :language conf :comments link
-#+PROPERTY: header-args:json :tangle pyprland.json :language json
+#+PROPERTY: header-args:conf :tangle hyprland.conf :comments link
+#+PROPERTY: header-args:json :tangle pyprland.json
 #+STARTUP: fold
 #+auto_tangle: t
 
@@ -16,22 +16,21 @@
 #+DESCRIPTION: My literate config for Hyprland, a dynamic tilling window manager
 #+HTML:<!--more-->
 
-* Introduction
-This is my hyprland literate configuration. 
+* Intro
+This is my hyprland literate configuration.
 Codes from hyprland.conf, pyprland.json, etc are generated from this org file,
-by running =M-x org-babel-tangle= in your emacs.
+by running =M-x org-babel-tangle= inside emacs.
 
-It's generally not recommended to edit codes in those files. 
-But if you have to, don't forget to run =M-x org-babel-detangle= to update codes blocks in this org file. Also, be careful not to edit comments like those in those generated files.
+You may see comments like this in hyprland.conf, if you do not use emacs org mode, just ignore them, they are used by emacs =M-x org-babel-detangle=.
 #+begin_src example
 # [[file:hyprland.org::*Input][Input:1]]
 # Input:1 ends here
 #+end_src
-They are essential to =M-x org-babel-detangle=.
 
 * Variables
 
 Variables are "options" of hyprland. Each variable has a unique value assigned to it.
+Basically, variables controls how your hyprland desktop looks like. It also controls devices (not including monitors)
 
 ** Input
 Keyboard, mouse and touch pad input settings.
@@ -49,36 +48,33 @@ input {
     natural_scroll = true
   }
   sensitivity = 1 # -1.0 - 1.0, 0 means no modification.
-  repeat_rate = 28
-  repeat_delay = 400
+  repeat_rate = 30 # default 25
+  repeat_delay = 250 # default 600, I prefer faster entering repeat mode
 }
  #+end_src
 ** General
 
-See [[https://wiki.hyprland.org/Configuring/Variables/][Configuring/Variables]] for more
+General options, controling window borders (size, color, etc) and more.
  #+begin_src conf
 general {
-  gaps_in = 10 
+  gaps_in = 10
   gaps_out = 20
-  border_size = 4
+  border_size = 1
   col.active_border = rgba(33ccffee) rgba(00ff99ee) 45deg
   col.inactive_border = rgba(24283be6)
-
   layout = dwindle
 # layout = master
 }
  #+end_src
 
 ** Decoration
-
-Configureing window decorations, including opacity, border rounding, shadow, etc. 
-See [[https://wiki.hyprland.org/Configuring/Variables/][Configuring/Variables]] for more
+Configureing window decorations, including opacity, border rounding, shadow, etc.
  #+begin_src conf
   decoration {
     active_opacity=1.0
     fullscreen_opacity=1.0
     rounding = 11
-    multisample_edges=true
+    # multisample_edges=true
     drop_shadow = true
     shadow_range = 4
     shadow_render_power = 3
@@ -86,29 +82,65 @@ See [[https://wiki.hyprland.org/Configuring/Variables/][Configuring/Variables]] 
    # blur = false; # deprecated
     blur {
       # enable kawase window background blur. default true
-      enabled = false 
+      enabled = false
       # blur size (distance). default 8
-      size = 8 
+      size = 8
       # the amount of passes to perform. default 1
-      passes = 1 
-      # make the blur layer ignore the opacity of the window. 
+      passes = 1
+      # make the blur layer ignore the opacity of the window.
       # default false
-      ignore_opacity = false 
-      # whether to enable further optimizations to the blur. 
+      ignore_opacity = false
+      # whether to enable further optimizations to the blur.
       # massively improve performance. default true
-      new_optimizations = true 
-      # make floating windows ignore tiled windows in their blur. 
-      # Only available if blur_new_optimizations is true. 
+      new_optimizations = true
+      # make floating windows ignore tiled windows in their blur.
+      # Only available if blur_new_optimizations is true.
       # Will reduce overhead on loating blur significantly.
-      xray = true 
+      xray = true
       # how much noise to apply. 0.0 - 1.0. default 0.0117
-      noise = 0.0117 
+      noise = 0.0117
       # contrast modulation for blur. 0.0 - 2.0. default 0.8916
-      contrast = 0.8916 
+      contrast = 0.8916
       # brightness  modulation for blur. 0.0 - 2.0. default 0.8172
-      brightness = 0.8172 
+      brightness = 0.8172
      }
    }
+ #+end_src
+
+** Group
+#+begin_src conf
+  group {
+    col.border_active = rgba(33ccffee) rgba(00ff99ee) 45deg
+    col.border_inactive  = rgba(24283be6)
+    col.border_locked_active = rgba(33ccffee) rgba(00ff99ee) 45deg
+    col.border_locked_inactive  = rgba(24283be6)
+    groupbar {
+      gradients = true
+  	  render_titles = true
+      font_size = 14
+      col.active = rgba(00ff99ee) rgba(33ccffee) 45deg
+      col.inactive = rgba(24283be6)
+      col.locked_active = rgba(00ff99ee) rgba(33ccffee) 45deg
+      col.locked_inactive = rgba(24283be6)
+    }
+  }
+#+end_src
+** Animations
+
+See https://wiki.hyprland.org/Configuring/Animations/ for more
+ #+begin_src conf
+animations {
+    enabled = true
+    bezier = myBezier, 0.05, 0.9, 0.1, 1.05
+    animation = windows, 1, 3, default
+    animation = windowsOut, 1, 4, default, popin 50%
+    animation = border, 1, 5, default
+    animation = borderangle, 1, 5, default
+    animation = fade, 1, 5, default
+    animation = workspaces, 1, 4, default
+    animation = specialWorkspace, 1, 2.5, default, slidevert
+    # animation = specialWorkspace, 1, 3, default, fade
+}
  #+end_src
 
 ** Layout
@@ -141,17 +173,17 @@ gestures {
   workspace_swipe_distance = 2500;
 }
  #+end_src
- 
+
 ** Devices
 
 See https://wiki.hyprland.org/Configuring/Keywords/#executing for more
  #+begin_src conf
   device:epic mouse V1 {
     sensitivity = -0.5
-  } 
+  }
  #+end_src
- 
-** Misc 
+
+** Misc
  #+begin_src conf
 misc {
   disable_hyprland_logo = true
@@ -159,98 +191,170 @@ misc {
     vrr = 2
 }
  #+end_src
- 
-* Keywords
 
-Keywords are not variables, but “commands” for more advanced configuring.
-ALL arguments separated by a comma, if you want to leave one of them empty, you cannot reduce the number of commas
-
-** Monitors
+* Monitors
+** Hyprland way
 My monitor information are secrets. Therefore I put it inside monitor.conf and git-ignored it.
 #+begin_src conf
   source=~/.config/hypr/monitor.conf
 #+end_src
-
-** Executes 
+** Kanshi
+#+begin_src conf
+exec-once=kanshi
+#+end_src
+* Executes
 
 Execute a shell script on startup of the compositor or on each time it's reloaded.
 - =exec-once=command= :: will execute only on launch
 - =exec=command= :: will execute on each reload
-#+begin_src conf 
-  # exec-once = dbus-update-activation-environment --all
-  exec-once = /usr/bin/gnome-keyring-daemon --start --components=secrets
-  exec-once = /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
-  exec-once = dunst &
-  exec-once = fcitx5 -d
-  exec-once = pulseaudio -D
+#+begin_src conf
+# exec-once = dbus-update-activation-environment --all
+# exec-once = gnome-keyring-daemon --start --components=secrets
+# exec-once = /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 &
+exec-once = lxqt-policykit-agent
+exec-once = dunst &
+exec-once = fcitx5 -d
+exec-once = pulseaudio -D
 
-  exec-once = wl-paste --type text --watch cliphist store #Stores only text data
-  exec-once = wl-paste --type image --watch cliphist store #Stores only image data
+exec-once = wl-paste --type text --watch cliphist store #Stores only text data
+exec-once = wl-paste --type image --watch cliphist store #Stores only image data
 
-  # exec-once = clash-verge;
-  exec-once = pkill eww; eww daemon; eww open-many bar0 bar1 bar2;
-  exec-once = pkill hyprpaper; hyprpaper;
+# exec-once = clash-verge;
+# exec-once = pkill eww; eww daemon; eww open-many bar0 bar1 bar2;
+exec-once = ags -b hypr
+exec-once = pkill hyprpaper; hyprpaper;
 
-  # exec-once = bash -c ~/.config/hypr/bin/init.sh
+# exec-once = bash -c ~/.config/hypr/bin/init.sh
 
-  # emacs client has bugs
-  # exec-once = emacs --init-directory=~/.doomemacs.d --daemon 
+# emacs client has bugs
+# exec-once = emacs --init-directory=~/.doomemacs.d --daemon
 #+end_src
 
-** Keybinds
-*** Helpful variables
+* Keybinds
+For keybindings, there're something worth considering:
+- Move focus: to workspace, to monitor, to a direction
+- Move window: to workspace, to monitor, to a direction
+- Window functions: fullscreen, close, etc
+  + Window group: toggle group, lock group, move window into/outof group, etc
+- Special workspace: toggle, move window into
+- Exec: launch something or some commands
+
+After spending an extensive amount of time configuring my dear hyprland, I learned out that it's better to put relevant keybindings together than to put relevant functions/dispatchers together.
+
+** Helpful variables
 #+begin_src conf
   # helpful variables
   $activeMonitorId="$(hyprctl -j monitors | jq -r '.[] | select(.focused == true) | .id')"
   $activeWorkspaceId="$(hyprctl -j activeworkspace | jq -r '.id')"
   $focusWorkspace="hyprctl dispatch workspace"
   $focusMonitor="hyprctl dispatch focusmonitor"
-  $move2Workspace="hyprctl dispatch movetoworkspace" 
+  $move2Workspace="hyprctl dispatch movetoworkspace"
   $specialWorkspaceId="$(hyprctl -j activewindow | jq -r '.workspace.name' | cut -d':' -f2)"
   $toggleOverview=
   $mainMod = SUPER
 
 #+end_src
 
-*** Launch applications
+** Launch applications
 
 #+begin_src conf
   # applications
   bind = $mainMod, Return, exec, kitty --single-instance
   bind = $mainMod, E, exec, thunar
-  bind = $mainMod, B, exec, vivaldi-stable --enable-features=UseOzonePlatform --ozone-platform=wayland --enable-wayland-ime %U
+  bind = $mainMod, B, exec, vivaldi
 
   bind = $mainMod, N, exec, neovide --multigrid
   bind = $mainMod, M, exec, emacs
 
-  bind = $mainMod, R, exec, ~/.config/rofi/launcher.sh
+  # no longer use rofi to launch apps, but ags's internal launcher
+  # bind = $mainMod, R, exec, ~/.config/rofi/launcher.sh
+  bind = $mainMod, R, exec, anyrun
   bind = $mainMod, F, exec, ~/.config/rofi/file.sh
   bind = $mainMod, V, exec, ~/.config/rofi/clipboard.sh
 
+  # grimblast for screenshots
+  # bind=,Print,execr, grimblast --notify --cursor copysave area $(xdg-user-dir PICTURES)/$(date +'%Y-%m-%d-%H-%M-%S_1.png') #
+  bind=,Print,execr, grimblast --notify --cursor copysave area ~/Pictures/$(date +'%Y-%m-%d_%H-%M-%S_1.png')
+  bind=SUPER,Print,exec,grimblast --notify save output ~/Pictures/$(date +'%Y-%m-%d_%H-%M-%S_1.png')
+  bind=SUPER SHIFT,Print,exec,grimblast --notify copy area - | swappy -f -
 #+end_src
 
- * Grimblast
+** Window Functions
 #+begin_src conf
-  bind=,Print,execr, grimblast --notify --cursor copysave area $(xdg-user-dir PICTURES)/$(date +'%Y-%m-%d-%H-%M-%S_1.png')
-  bind=SUPER,Print,exec,grimblast --notify save output $(xdg-user-dir PICTURES)/Screenshots/$(date +'%Y%m%d%H%M%S_1.png')
-  bind=SUPERSHIFT,Print,exec,grimblast save output - | swappy -f -
-#+end_src
-
-*** Window Functions
-#+begin_src conf
-  #function 
+  #function
   bind = $mainMod , Q, killactive,
   bind = $mainMod , S, togglesplit, # dwindle
-  bind = $mainMod , G, togglegroup,
-  # bind = $mainMod , O, execr, ~/.config/hypr/bin/eww_toggle_overview.sh 
+  bind = $mainMod Alt, G, togglegroup,
+  bind = $mainMod , G, changegroupactive
+  bind = $mainMod , P, pin
+  # bind = $mainMod , O, execr, ~/.config/hypr/bin/eww_toggle_overview.sh
   bind = $mainMod ALT, F9,  pseudo, # dwindle
   bind = $mainMod ALT, F10, togglefloating,
   bind = $mainMod ALT, F11, fullscreen, 0
 #+end_src
-*** Desktop Functions
+
+** Directional Functions
+My directional keybindings is very very wierd.
+It's not HJKL, not wasd, not IJKL, not JKL;, *BUT JLK;*
+*Therefore do not try to copy my keybindings below,
+you'll definitely regret it*
+
 #+begin_src conf
-  bind = $mainMod ALT, Delete, exec, wlogout  
-  bind = $mainMod CTRL ALT, Delete, exec, kill  
+  bind = $mainMod, left, movefocus, l
+  bind = $mainMod, right, movefocus, r
+  bind = $mainMod, up, movefocus, u
+  bind = $mainMod, down, movefocus, d
+  bind = $mainMod, J, movefocus, l
+  bind = $mainMod, L, movefocus, d
+  bind = $mainMod, K, movefocus, u
+  bind = $mainMod, semicolon, movefocus, r
+
+  bind = $mainMod SHIFT, left, movewindoworgroup, l
+  bind = $mainMod SHIFT, right, movewindoworgroup, r
+  bind = $mainMod SHIFT, up, movewindoworgroup, u
+  bind = $mainMod SHIFT, down, movewindoworgroup, d
+  bind = $mainMod SHIFT, J, movewindoworgroup, l
+  bind = $mainMod SHIFT, L, movewindoworgroup, d
+  bind = $mainMod SHIFT, K, movewindoworgroup, u
+  bind = $mainMod SHIFT, semicolon, movewindoworgroup, r
+
+  binde = $mainMod CTRL, left,resizeactive,-50 0
+  binde = $mainMod CTRL, down,resizeactive, 0 50
+  binde = $mainMod CTRL, up,resizeactive, 0 -50
+  binde = $mainMod CTRL, right,resizeactive, 50 0
+  binde = $mainMod CTRL, J,resizeactive,-50 0
+  binde = $mainMod CTRL, L,resizeactive, 0 50
+  binde = $mainMod CTRL, K,resizeactive, 0 -50
+  binde = $mainMod CTRL, semicolon,resizeactive, 50 0
+
+  bind  = $mainMod CTRL, R, submap, resize
+  submap = resize
+  binde = , left , resizeactive,-50 0
+  binde = , down , resizeactive, 0 50
+  binde = , up   , resizeactive, 0 -50
+  binde = , right, resizeactive, 50 0
+  binde = , J    , resizeactive,-50 0
+  binde = , L    , resizeactive, 0 50
+  binde = , K    , resizeactive, 0 -50
+  binde = , semicolon, resizeactive, 50 0
+  bind  = ,escape, submap, reset
+  bind  = $mainMod SHIFT, R, submap, reset
+  submap = reset
+
+  binde = $mainMod ALT, left,moveactive,-50 0
+  binde = $mainMod ALT, down,moveactive, 0 50
+  binde = $mainMod ALT, up,moveactive, 0 -50
+  binde = $mainMod ALT, right,moveactive, 50 0
+  binde = $mainMod ALT, J,moveactive,-50 0
+  binde = $mainMod ALT, L,moveactive, 0 50
+  binde = $mainMod ALT, K,moveactive, 0 -50
+  binde = $mainMod ALT, semicolon,moveactive, 50 0
+
+#+end_src
+** Desktop Functions
+#+begin_src conf :tangle no
+  bind = $mainMod, Delete, exec, wlogout
+  bind = $mainMod CTRL ALT, Delete, exec, kill
   bindle = , XF86AudioRaiseVolume,    exec, pactl set-sink-volume @DEFAULT_SINK@ +1%
   bindle = , XF86AudioLowerVolume,    exec, pactl set-sink-volume @DEFAULT_SINK@ -1%
   bindle = , XF86MonBrightnessUp,     exec, brightnessctl set 5%+ -q
@@ -262,21 +366,40 @@ Execute a shell script on startup of the compositor or on each time it's reloade
   bindl  = , XF86AudioPrev,           exec, playerctl previous
   bindl  = , XF86AudioNext,           exec, playerctl next
   bindl  = , XF86AudioPlay,           exec, playerctl play-pause
-
-  bind = CTRL ALT, F1, exec, notify-send "CTRL ALT F1"
-  bind = CTRL ALT, F2, exec, notify-send "CTRL ALT F2"
 #+end_src
 
-*** Move Focus
+** AGS interaction
 #+begin_src conf
-  bind = $mainMod, left, movefocus, l
-  bind = $mainMod, right, movefocus, r
-  bind = $mainMod, up, movefocus, u
-  bind = $mainMod, down, movefocus, d
-  bind = $mainMod, H, movefocus, l
-  bind = $mainMod, J, movefocus, d
-  bind = $mainMod, K, movefocus, u
-  bind = $mainMod, L, movefocus, r
+# AGS
+bind = $mainMod ALT,  Delete, exec, ags -b hypr toggle-window powermenu
+bind = CTRL SHIFT, R,   exec, ags -b hypr quit; ags -b hypr
+# bind = SUPER, R,        exec, ags -b hypr toggle-window applauncher
+bind = , XF86Launch4,   exec, ags -b hypr -r "ags.Service.Recorder.start()"
+bind = , XF86PowerOff,  exec, ags -b hypr toggle-window powermenu
+bind = SUPER, Tab,      exec, ags -b hypr toggle-window overview
+# bind  = , XF86Launch1, exec,
+
+# Laptop
+bindle = , XF86MonBrightnessUp,     exec, ags -b hypr -r "ags.Service.Brightness.screen += 0.05; ags.Service.Indicator.display()"
+bindle = , XF86MonBrightnessDown,   exec, ags -b hypr -r "ags.Service.Brightness.screen -= 0.05; ags.Service.Indicator.display()"
+bindle = , XF86KbdBrightnessUp,     exec, ags -b hypr -r "ags.Service.Brightness.kbd++; ags.Service.Indicator.kbd()"
+bindle = , XF86KbdBrightnessDown,   exec, ags -b hypr -r "ags.Service.Brightness.kbd--; ags.Service.Indicator.kbd()"
+bindle = , XF86AudioRaiseVolume,    exec, ags -b hypr -r "ags.Service.Audio.speaker.volume += 0.05; ags.Service.Indicator.speaker()"
+bindle = , XF86AudioLowerVolume,    exec, ags -b hypr -r "ags.Service.Audio.speaker.volume -= 0.05; ags.Service.Indicator.speaker()"
+bindl  = , XF86AudioPlay,           exec, ags -b hypr -r "ags.Service.Mpris.players.pop()?.playPause()"
+bindl  = , XF86AudioStop,           exec, ags -b hypr -r "ags.Service.Mpris.players.pop()?.stop()"
+bindl  = , XF86AudioPause,          exec, ags -b hypr -r "ags.Service.Mpris.players.pop()?.pause()"
+bindl  = , XF86AudioPrev,           exec, ags -b hypr -r "ags.Service.Mpris.players.pop()?.previous()"
+bindl  = , XF86AudioNext,           exec, ags -b hypr -r "ags.Service.Mpris.players.pop()?.next()"
+bindl  = , XF86AudioMicMute,        exec, pactl set-source-mute @DEFAULT_SOURCE@ toggle
+
+# Print
+# bind = ,Print, exec, ags -b hypr run-js "ags.Service.Recorder.screenshot()"
+# bind = SHIFT,Print, exec, ags -b hypr run-js "ags.Service.Recorder.screenshot(true)"
+
+#+end_src
+** Move Focus
+#+begin_src conf
 
   bind = $mainMod, 1, execr, "$focusWorkspace $activeMonitorId"1
   bind = $mainMod, 2, execr, "$focusWorkspace $activeMonitorId"2
@@ -288,18 +411,12 @@ Execute a shell script on startup of the compositor or on each time it's reloade
   bind = $mainMod, 8, execr, "$focusWorkspace $activeMonitorId"8
   bind = $mainMod, 9, execr, "$focusWorkspace $activeMonitorId"9
   bind = $mainMod, 0, execr, "$focusWorkspace $((1+$activeMonitorId))"0
-  
-  bind = $mainMod, i, focusmonitor, $screen1
-  bind = $mainMod, o, focusmonitor, $screen2
-  bind = $mainMod, p, focusmonitor, $screen3
 
   #    Move focuse inside focusing monitor
   # bind = $mainMod ALT, H, execr, "$focusWorkspace" "$activeMonitorId""$(((activeWorkspaceId-1)%10))"
   # bind = $mainMod ALT, L, execr, "$focusWorkspace" "$activeMonitorId""$(((activeWorkspaceId+1)%10))"
   bind = $mainMod , COMMA,       execr, `if [ $(("$activeWorkspaceId" % 10)) -eq 1 ]; then "$focusWorkspace $(($activeWorkspaceId+9))"; else "$focusWorkspace $(($activeWorkspaceId-1))" ;fi`
   bind = $mainMod , PERIOD,      execr, `if [ $(("$activeWorkspaceId" % 10)) -eq 0 ]; then "$focusWorkspace $(($activeWorkspaceId-9))"; else "$focusWorkspace $(($activeWorkspaceId+1))" ;fi`
-  bind = $mainMod , BracketLeft, execr, `if [ $(("$activeWorkspaceId" % 10)) -eq 1 ]; then "$focusWorkspace $(($activeWorkspaceId+9))"; else "$focusWorkspace $(($activeWorkspaceId-1))" ;fi`
-  bind = $mainMod , BracketRight,execr, `if [ $(("$activeWorkspaceId" % 10)) -eq 0 ]; then "$focusWorkspace $(($activeWorkspaceId-9))"; else "$focusWorkspace $(($activeWorkspaceId+1))" ;fi`
   bind = $mainMod SHIFT, COMMA,  execr, `if [ $(("$activeWorkspaceId" % 10)) -eq 1 ]; then "$move2Workspace $(($activeWorkspaceId+9))"; else "$move2Workspace $(($activeWorkspaceId-1))" ;fi`
   bind = $mainMod SHIFT, PERIOD, execr, `if [ $(("$activeWorkspaceId" % 10)) -eq 0 ]; then "$move2Workspace $(($activeWorkspaceId-9))"; else "$move2Workspace $(($activeWorkspaceId+1))" ;fi`
   bind = $mainMod ALT, h, workspace, m-1
@@ -310,21 +427,7 @@ Execute a shell script on startup of the compositor or on each time it's reloade
   # bind = $mainMod , PERIOD, workspace, m+1
 #+end_src
 
-*** Move Window
-
-#+begin_src conf
-  #  Move window{{{2
-  #    Move window to direction{{{
-  bind = $mainMod SHIFT, left, movewindow, l
-  bind = $mainMod SHIFT, right, movewindow, r
-  bind = $mainMod SHIFT, up, movewindow, u
-  bind = $mainMod SHIFT, down, movewindow, d
-  bind = $mainMod SHIFT, H, movewindow, l
-  bind = $mainMod SHIFT, J, movewindow, d
-  bind = $mainMod SHIFT, K, movewindow, u
-  bind = $mainMod SHIFT, L, movewindow, r
-  #}}}
-#+end_src
+** Move Window
 
 #+begin_src conf
   #    Move window to workspace {{{
@@ -341,51 +444,7 @@ Execute a shell script on startup of the compositor or on each time it's reloade
   #}}}
 #+end_src
 
-#+begin_src conf
-  #    Move window to monitor {{{
-  bind = $mainMod SHIFT, F1, movewindow, mon:$screen1
-  bind = $mainMod SHIFT, F2, movewindow, mon:$screen2
-  bind = $mainMod SHIFT, F3, movewindow, mon:$screen3
-  #}}}
-#+end_src
-
-#+begin_src conf
-
-  #    Move window to special workspace {{{
-  bind = $mainMod SHIFT, S,   movetoworkspace, special
-  bind = $mainMod SHIFT, F1,  movetoworkspace, special:1
-  bind = $mainMod SHIFT, F2,  movetoworkspace, special:2
-  bind = $mainMod SHIFT, F3,  movetoworkspace, special:3
-  bind = $mainMod SHIFT, F4,  movetoworkspace, special:4
-  bind = $mainMod SHIFT, F5,  movetoworkspace, special:5
-  bind = $mainMod SHIFT, F6,  movetoworkspace, special:6
-  bind = $mainMod SHIFT, F7,  movetoworkspace, special:7
-  bind = $mainMod SHIFT, F8,  movetoworkspace, special:8
-  bind = $mainMod SHIFT, F9,  movetoworkspace, special:9 
-  bind = $mainMod SHIFT, F10, movetoworkspace, special:10 
-  bind = $mainMod SHIFT, F11, movetoworkspace, special:11 
-  bind = $mainMod SHIFT, F12, movetoworkspace, special:12 
-  #}}}
-#+end_src
-
-#+begin_src conf
-
-  #    Move float window position{{{
-  binde = $mainMod ALT, left,moveactive,-50 0
-  binde = $mainMod ALT, down,moveactive, 0 50 
-  binde = $mainMod ALT, up,moveactive, 0 -50
-  binde = $mainMod ALT, right,moveactive, 50 0
-  binde = $mainMod ALT, H,moveactive,-50 0
-  binde = $mainMod ALT, J,moveactive, 0 50
-  binde = $mainMod ALT, K,moveactive, 0 -50
-  binde = $mainMod ALT, L,moveactive, 50 0
-  #}}}
-  #
-  #}}}2
-#+end_src
-
-
- * Mouse actions to move window, resize window and swap workspaces.
+ Mouse actions to move window, resize window and swap workspaces.
 #+begin_src conf
   #  Mouse window action{{{
   bindm= $mainMod, mouse:272, movewindow
@@ -395,58 +454,49 @@ Execute a shell script on startup of the compositor or on each time it's reloade
   #}}}
 #+end_src
 
- * Special workspace
+** COMMENT Special workspace
+
 #+begin_src conf
-  #  Special workspace{{{
-  #  hide a showing specialWorkspace
+  #  hide an active specialWorkspace
   bind = $mainMod, escape, execr, hyprctl dispatch togglespecialworkspace $specialWorkspaceId
-  # bind = $mainMod, F1,  togglespecialworkspace, 1
-  # bind = $mainMod, F2,  togglespecialworkspace, 2
-  # bind = $mainMod, F3,  togglespecialworkspace, 3
-  # bind = $mainMod, F4,  togglespecialworkspace, 4
-  # bind = $mainMod, F5,  togglespecialworkspace, 5
-  # bind = $mainMod, F6,  togglespecialworkspace, 6
-  # bind = $mainMod, F7,  togglespecialworkspace, 7
-  # bind = $mainMod, F8,  togglespecialworkspace, 8
-  # bind = $mainMod, F9,  togglespecialworkspace, 9 
-  # bind = $mainMod, F10, togglespecialworkspace, 10 
-  # bind = $mainMod, F11, togglespecialworkspace, 11 
-  # bind = $mainMod, F12, togglespecialworkspace, 12 
-  #}}}
-
-  #}}}1
+  bind = $mainMod, F1,  togglespecialworkspace, 1
+  bind = $mainMod, F2,  togglespecialworkspace, 2
+  bind = $mainMod, F3,  togglespecialworkspace, 3
+  bind = $mainMod, F4,  togglespecialworkspace, 4
+  bind = $mainMod, F5,  togglespecialworkspace, 5
+  bind = $mainMod, F6,  togglespecialworkspace, 6
+  bind = $mainMod, F7,  togglespecialworkspace, 7
+  bind = $mainMod, F8,  togglespecialworkspace, 8
+  bind = $mainMod, F9,  togglespecialworkspace, 9
+  bind = $mainMod, F10, togglespecialworkspace, 10
+  bind = $mainMod, F11, togglespecialworkspace, 11
+  bind = $mainMod, F12, togglespecialworkspace, 12
 #+end_src
 
-*** Window resize
 #+begin_src conf
-  binde = $mainMod CTRL, left,resizeactive,-50 0
-  binde = $mainMod CTRL, down,resizeactive, 0 50 
-  binde = $mainMod CTRL, up,resizeactive, 0 -50
-  binde = $mainMod CTRL, right,resizeactive, 50 0
-  binde = $mainMod CTRL, H,resizeactive,-50 0
-  binde = $mainMod CTRL, J,resizeactive, 0 50
-  binde = $mainMod CTRL, K,resizeactive, 0 -50
-  binde = $mainMod CTRL, L,resizeactive, 50 0
 
-  bind  = $mainMod CTRL, R, submap, resize
-  submap = resize
-  binde = , left , resizeactive,-50 0
-  binde = , down , resizeactive, 0 50
-  binde = , up   , resizeactive, 0 -50
-  binde = , right, resizeactive, 50 0
-  binde = , h    , resizeactive,-50 0
-  binde = , j    , resizeactive, 0 50
-  binde = , k    , resizeactive, 0 -50
-  binde = , l    , resizeactive, 50 0
-  bind  = ,escape, submap, reset
-  bind  = $mainMod SHIFT, R, submap, reset
-  submap = reset
+  bind = $mainMod SHIFT, S,   movetoworkspace, special
+  bind = $mainMod SHIFT, F1,  movetoworkspace, special:1
+  bind = $mainMod SHIFT, F2,  movetoworkspace, special:2
+  bind = $mainMod SHIFT, F3,  movetoworkspace, special:3
+  bind = $mainMod SHIFT, F4,  movetoworkspace, special:4
+  bind = $mainMod SHIFT, F5,  movetoworkspace, special:5
+  bind = $mainMod SHIFT, F6,  movetoworkspace, special:6
+  bind = $mainMod SHIFT, F7,  movetoworkspace, special:7
+  bind = $mainMod SHIFT, F8,  movetoworkspace, special:8
+  bind = $mainMod SHIFT, F9,  movetoworkspace, special:9
+  bind = $mainMod SHIFT, F10, movetoworkspace, special:10
+  bind = $mainMod SHIFT, F11, movetoworkspace, special:11
+  bind = $mainMod SHIFT, F12, movetoworkspace, special:12
+  #}}}
 #+end_src
 
-** Window rules
-*** Floats
+* Window rules
+** Floats
 These are the windows I want to make float.
 #+begin_src conf
+windowrule = float, ^(xdg-desktop-portal)$
+windowrule = float, ^(xdg-desktop-portal-gnome)$
 windowrule = float, ^(Rofi)$
 windowrule = float, ^(wlogout)$
 windowrule = float, ^(org.gnome.Calculator)$
@@ -467,54 +517,67 @@ windowrule = float, ^(hmcl)$
 windowrulev2 = float, class:^(thunar)$,title:^(?!.* - Thunar$).*$
 windowrule = float, ^(org.fcitx.fcitx5-config-qt)
 windowrule = float, ^(file-roller)$
+windowrulev2 = float, class:^()$
 #+end_src
-*** X Menus
+** Tiles
+#+begin_src conf
+windowrulev2 = tile, class:^(com-cburch-logisim-Main)$
+#+end_src
+** X Menus
 Some xwayland window's menu have a dim black border by default. However hyprland applys a corner rounding to it by cutting off its 4 corners, making the corner having no border, which looks strange.
 
-These menus have no class (class=""). So the following rule can disable the corner rounding for them. 
+These menus have no class (class=""). So the following rule can disable the corner rounding for them.
 #+begin_src conf
   windowrulev2 = rounding 0, class:^()$, floating:1, xwayland:1
   windowrulev2 = rounding 0, class:^(GoldenDict-ng)$, floating:1, xwayland:1
 
 #+end_src
-*** VLC
+** VLC
 #+begin_src conf
 windowrulev2 = float, class:^(vlc)$,title:^(Adjustments and Effects — VLC media player)$
 windowrulev2 = float, class:^(vlc)$,title:^(Simple Preferences — VLC media player)$
 #+end_src
 
-*** Emacs
-Ediff
+** Emacs
+Every emacs frame, whose ~initialTitle~ not beginning with ~*scratch*~, is created inside emacs, and thus should be floated.
 #+begin_src conf
-windowrulev2 = float, class:^(Emacs)$,title:^(Ediff)$
-windowrulev2 = noborder, class:^(Emacs)$,title:^(Ediff)$
+windowrulev2 = float, class:^emacs, initialTitle:^(?!.*\*scratch\*)
+windowrulev2 = float, class:^emacs, title:^Ediff
+windowrulev2 = noborder, class:^emacs, initialTitle:^(?!.*\*scratch\*)
 #+end_src
-Minibuf
-#+begin_src conf
-windowrulev2 = float, class:^(emacs)$,title:^( \*Minibuf-\d+\*)$
-windowrulev2 = noborder, class:^(emacs)$,title:^( \*Minibuf-\d+\*)$
-#+end_src
+
 Eaf
 #+begin_src conf
 windowrule = float, class:^(python3)$, title:^(eaf.py)$
 windowrule = noanim, class:^(python3)$, title:^(eaf.py)$
 windowrule = nofocus, class:^(python3)$, title:^(eaf.py)$
 #+end_src
+
 Holo-layer
 #+begin_src conf
-windowrulev2 = float, class:^(python3)$, title:^(holo_layer.py)$
-windowrulev2 = nofocus, class:^(python3)$, title:^(holo_layer.py)$
-windowrulev2 = noanim, class:^(python3)$, title:^(holo_layer.py)$
+windowrulev2 = nofullscreenrequest, class:^(holo_layer.py)$
+windowrulev2 = float, class:^(holo_layer.py)$
+windowrulev2 = nofocus, class:^(holo_layer.py)$
+windowrulev2 = noblur, class:^(holo_layer.py)$
 #+end_src
 
-*** Steam
+** Steam
 Steam has a friend list window. By default when opening friends list, it will be tiled together with steam, which isn't nice. Adding this rule makes Friends list float.
 #+begin_src conf
 windowrulev2 = float, class:^(steam)$, title:^(Friends List)
 #+end_src
 
-*** Bitwig Studio
-Bigwig Studio is a music production studio. It has buttons that are dragable. When dragging those buttons, a tiny tooltip window will float above the button showing its current value. 
+Menu's in steam title bar's are not interactable, when you click on an entry and try to move the pointer to the menu, the menu disappears. Adding this rule prevents the menu from disappearing.
+#+begin_src conf
+windowrulev2 = nofocus, class:^(steam)$, title:^()$, floating:1
+#+end_src
+
+# #+begin_src conf
+# windowrulev2 = stayfocused, title:^()$,class:^(steam)$
+# windowrulev2 = minsize 1 1, title:^()$,class:^(steam)$
+# #+end_src
+** Bitwig Studio
+Bigwig Studio is a music production studio. It has buttons that are dragable. When dragging those buttons, a tiny tooltip window will float above the button showing its current value.
 
 However, on hyprland, when dragging those buttons, this tooltip window will be auto focused, which then lead to bitwig's window losing its focus, and the drag action failing to be recognized. Thus the button appears to be undragable.
 
@@ -523,31 +586,13 @@ The tooltip window's class is "", and it's floating. Therefore adding the follow
 windowrulev2 = noinitialfocus, class:^()$, floating:1
 #+end_src
 
-** Workspace Rules
+* Workspace Rules
 Currently I have no workspace rules.
 
-** Animations
+* COMMENT Pyprland
 
-See https://wiki.hyprland.org/Configuring/Animations/ for more
- #+begin_src conf
-animations {
-    enabled = true
-    bezier = myBezier, 0.05, 0.9, 0.1, 1.05
-    animation = windows, 1, 3, default
-    animation = windowsOut, 1, 4, default, popin 50%
-    animation = border, 1, 5, default
-    animation = borderangle, 1, 5, default
-    animation = fade, 1, 5, default
-    animation = workspaces, 1, 2, default
-    animation = specialWorkspace, 1, 2.5, default, slidevert
-    # animation = specialWorkspace, 1, 3, default, fade
-}
- #+end_src
- 
-* Pyprland
-
-[[https://github.com/hyprland-community/pyprland][Pyprland]] is not part of hyprland. It is a community driven program that hosts process for multiple Hyprland plugins. 
-It is a program, therefore you don't need to install it the plugin way.
+[[https://github.com/hyprland-community/pyprland][Pyprland]] is not part of hyprland. It is a community driven program that hosts process for multiple Hyprland plugins.
+It is a python program, therefore we don't need to install it the plugin way.
 
 Below are configurations for pyprland. All the json codes are tangled to =pyprland.json=, and other codes are tangled to =hyprland.conf=
 
@@ -580,7 +625,7 @@ Pyprland's main config goes to =~/.config/hypr/pyprland.json=
   :PROPERTIES:
   :header-args:json: :noweb-ref scratchpads
   :END:
-Scratchpads is one plugin hosted by pyprland. 
+Scratchpads is one plugin hosted by pyprland.
 
 A scrachpad acts like a window in a special workspace, and can be toggled out by a command (=pypr toggle xxx=) or a key if bind this command to a key.
 
@@ -590,13 +635,13 @@ However, they are different to special workspaces in several ways:
 3. It can toggled out from 4 directions (fromTop, fromBottom, fromLeft, fromRight)
 4. See the [[https://github.com/hyprland-community/pyprland/wiki/Plugins#scratchpads][scratchpads section of pyprlad wiki]] for more
 
-All the following json codes are tangled under the  "=scratchpads=" variable in =pyprland.json= 
- 
+All the following json codes are tangled under the  "=scratchpads=" variable in =pyprland.json=
+
 *** Dropterm
 #+begin_src json
   "term": {
     "command": "kitty --class kitty-dropterm",
-    "animation": "fromTop",
+    "animation": "fromRight",
     "lazy": true
   },
 #+end_src
@@ -605,45 +650,17 @@ All the following json codes are tangled under the  "=scratchpads=" variable in 
   $dropterm  = ^(kitty-dropterm)$
   windowrule = float,$dropterm
   windowrule = workspace special silent,$dropterm
-  windowrule = size 75% 60%,$dropterm
+  windowrule = size 45% 90%,$dropterm
 #+end_src
 
-*** File-manager
-#+begin_src json
-  "files": {
-    "command": "nautilus",
-    "animation": "fromTop",
-    "lazy": true
-  },
-#+end_src
-#+begin_src conf :tangle no
-  bind = $mainMod, F2, exec, pypr toggle files
-  windowrule = float, ^(org.gnome.Nautilus)$
-  windowrule = workspace special silent,^(org.gnome.Nautilus)$
-  windowrule = size 75% 60%,^(org.gnome.Nautilus)$
-#+end_src
-*** Dict
-#+begin_src json
-  "dict": {
-    "command": "goldendict",
-    "animation": "fromTop",
-    "lazy": true
-  },
-#+end_src
-#+begin_src conf :tangle no
-  bind = $mainMod, F3, exec, pypr toggle dict
-  windowrulev2 = float, class:^(GoldenDict)$
-  windowrulev2 = workspace special silent, class:^(GoldenDict)$
-  windowrulev2 = size 75% 60%, class:^(GoldenDict)$
-#+end_src
 *** Fancy-Terms
 
 #+begin_src conf
-  bind = $mainMod, F4, exec, pypr toggle pipes; sleep 0.07; pypr toggle cava;
-  bind = $mainMod, F4, exec, pypr toggle cmatrix; sleep 0.07; pypr toggle tty-clock
+  bind = $mainMod ALT SHIFT, F1, exec, pypr toggle pipes; sleep 0.07; pypr toggle cava;
+  bind = $mainMod ALT SHIFT, F1, exec, pypr toggle cmatrix; sleep 0.07; pypr toggle tty-clock
 #+end_src
  * tty-clock
-#+begin_src json 
+#+begin_src json
   "tty-clock": {
     "command": "kitty --class kitty-tty-clock tty-clock -cs",
     "animation": "fromTop",
@@ -673,7 +690,7 @@ All the following json codes are tangled under the  "=scratchpads=" variable in 
  * Pipes
 #+begin_src json
   "pipes": {
-    "command": "kitty --class kitty-pipes pipes",
+    "command": "kitty --class kitty-pipes pipes-rs",
     "animation": "fromLeft",
     "lazy": true
   },
@@ -697,77 +714,59 @@ All the following json codes are tangled under the  "=scratchpads=" variable in 
   windowrule = workspace special silent, ^(kitty-cmatrix)$
   windowrule = size 25% 60%, ^(kitty-cmatrix)$
 #+end_src
-*** Music 
+*** File-manager
+#+begin_src json
+  "files": {
+    "command": "nemo --class nemo-pypr",
+    "animation": "fromLeft",
+    "lazy": true
+  },
+#+end_src
+#+begin_src conf
+  bind = $mainMod, F2, exec, pypr toggle files
+  windowrulev2 = float, class:^(nemo)$, title:^(Home)$
+  windowrulev2 = workspace special silent, class:^(nemo)$, title:^(Home)$
+  windowrulev2 = size 45% 90%, class:^(nemo)$, title:^(Home)$
+  # windowrulev2 = float, class:^(org.gnome.Nautilus)$, title:^(Loading...)$
+  # windowrulev2 = workspace special silent, class:^(org.gnome.Nautilus)$, title:^(Loading...)$
+  # windowrulev2 = size 45% 90%, class:^(org.gnome.Nautilus)$, title:^(Loading...)$ #
+#+end_src
+*** Dict
+#+begin_src json
+  "dict": {
+    "command": "goldendict",
+    "animation": "fromTop",
+    "lazy": true
+  },
+#+end_src
+#+begin_src conf :tangle no
+  bind = $mainMod, F3, exec, pypr toggle dict
+  windowrulev2 = float, class:^(GoldenDict)$
+  windowrulev2 = workspace special silent, class:^(GoldenDict)$
+  windowrulev2 = size 75% 60%, class:^(GoldenDict)$
+#+end_src
+*** Music
 
 Toggle tauon music box from top of the screen.
 #+begin_src json
   "music": {
     "command": "tauon",
     "animation": "fromTop",
-    "unfocus": "hide",
-    "lazy": true
-  },
-#+end_src
-#+begin_src conf :tangle no
-  bind = $mainMod, F5, exec, pypr toggle music
-  windowrule = float,^(tauonmb)$
-  windowrule = workspace special,^(tauonmb)$
-  windowrule = size 50% 50%,^(tauonmb)$
-#+end_src
-*** Pavucontrol
-
-Toggle pavucontrol from right of the screen.
-#+begin_src json
-  "volume": {
-    "command": "pavucontrol",
-    "animation": "fromRight",
-    "unfocus": "hide",
     "lazy": true
   },
 #+end_src
 #+begin_src conf
-  bind = $mainMod, F5, exec, pypr toggle volume
-  windowrule = float,^(pavucontrol)$
-  windowrule = workspace special silent,^(pavucontrol)$
-  windowrule = size 25% 25%,^(pavucontrol)$
+  bind = $mainMod, F6, exec, pypr toggle music
+  windowrule = float,^(tauonmb)$
+  windowrule = workspace special silent,^(tauonmb)$
+  windowrule = size 80% 80%,^(tauonmb)$
 #+end_src
-
 *** Network
 
-Toggle network-manager from right, bluetooth-manager from left, 
+Toggle network-manager from right, bluetooth-manager from left,
 and clash-verge from top.
 
- * Network-manager
- #+begin_src json
-   "network": {
-     "command": "nm-connection-editor",
-     "animation": "fromRight",
-     "lazy": true
-   },
- #+end_src
- #+begin_src conf
-   bind = $mainMod, F9, exec, pypr toggle network
-   windowrule = float, ^(nm-connection-editor)$
-   windowrulev2 = workspace special silent, class:^(nm-connection-editor)$, title:^(Network Connections)$
-   windowrule = size 18% 40%,^(nm-connection-editor)$
- #+end_src
-
- * Bluetooth
- #+begin_src json
-   "bluetooth": {
-     "command": "blueman-manager",
-     "animation": "fromLeft",
-     "lazy": true
-   },
- #+end_src
- #+begin_src conf
-   bind = $mainMod, F9, exec, pypr toggle bluetooth
-   windowrule = float, ^(blueman-manager)
-   windowrule = workspace special silent, ^(blueman-manager)$
-   windowrule = size 18% 40%,^(blueman-manager)$
- #+end_src
-
- * Clash-Verge
+ Clash-Verge
  #+begin_src json
    "clash": {
      "command": "clash-verge",
@@ -776,12 +775,133 @@ and clash-verge from top.
    },
  #+end_src
  #+begin_src conf
-   bind = $mainMod, F9, exec, pypr toggle clash
+   bind = $mainMod, F4, exec, pypr toggle clash
    windowrule = float, ^(clash-verge)$
-   windowrule = workspace special silent, ^(clash-verge)$
+   # windowrule = workspace special silent, ^(clash-verge)$
    windowrule = size 50% 50%,^(clash-verge)$
  #+end_src
- 
+
 ** Lost Windows
-#+begin_src 
+
+* Pyprland
+:PROPERTIES:
+:header-args:toml: :tangle pyprland.toml
+:END:
+
+[[https://github.com/hyprland-community/pyprland][Pyprland]] is not part of hyprland. It is a community driven program that hosts process for multiple Hyprland plugins.
+It is a python program, therefore we don't need to install it as a traditional hyprland plugin.
+
+Below are configurations for pyprland. All the toml codes are tangled to =pyprland.toml=, and other codes are tangled to =hyprland.conf=
+
+First let's make pypr run on startup up.
+#+begin_src conf
+  exec-once = pypr
+#+end_src
+
+#+begin_src toml
+[pyprland]
+plugins = ["scratchpads"]
+#+end_src
+** Scratchpads
+template
+#+begin_src toml  :tangle no
+[scratchpads.xxx]
+command = ""
+class = ""
+animation = ""
+lazy = false
+size = "% %"
+#+end_src
+*** Kitty Scratch Term
+#+begin_src toml
+[scratchpads.term]
+command = "kitty --class kitty-scratch-term"
+class = "kitty-scratch-term"
+animation = "fromRight"
+lazy = false
+size = "45% 90%"
+#+end_src
+#+begin_src conf
+bind = $mainMod, F1, exec, pypr toggle term
+#+end_src
+*** Nerd Terms
+#+begin_src conf
+  bind = $mainMod ALT SHIFT, F1, exec, pypr toggle pipes; sleep 0.07; pypr toggle cava;
+  bind = $mainMod ALT SHIFT, F1, exec, pypr toggle cmatrix; sleep 0.07; pypr toggle tty-clock
+#+end_src
+
++ tty-clock
+#+begin_src toml
+[scratchpads.tty-clock]
+command = "kitty --class kitty-tty-clock tty-clock -cs"
+class = "kitty-tty-clock"
+animation = "fromTop"
+lazy = true
+size = "40% 45%"
+#+end_src
+
++ cava
+#+begin_src toml
+[scratchpads.cava]
+command = "kitty --class kitty-cava cava"
+class = "kitty-cava"
+animation = "fromBottom"
+lazy = true
+size = "40% 45%"
+#+end_src
+
++ pipes
+#+begin_src toml
+[scratchpads.pipes]
+command = "kitty --class kitty-pipes pipes-rs"
+class = "kitty-pipes"
+animation = "fromLeft"
+lazy = true
+size = "25% 60%"
+#+end_src
+
++ CMatrix
+#+begin_src toml
+[scratchpads.cmatrix]
+command = "kitty --class kitty-cmatrix cmatrix"
+class = "kitty-cmatrix"
+animation = "fromRight"
+lazy = true
+size = "25% 60%"
+#+end_src
+*** Nemo File Manager
+#+begin_src toml
+[scratchpads.files]
+command = "nemo"
+class = "nemo"
+animation = "fromLeft"
+lazy = false
+size = "45% 90%"
+#+end_src
+#+begin_src conf
+bind = $mainMod, F2, exec, pypr toggle files
+#+end_src
+*** Tauon music box
+#+begin_src toml
+[scratchpads.tauon]
+command = "tauon"
+class = "tauonmb"
+animation = "fromTop"
+lazy = true
+size = "80% 80%"
+#+end_src
+#+begin_src conf
+bind = $mainMod, F6, exec, pypr toggle tauon
+#+end_src
+*** Clash verge
+#+begin_src toml
+[scratchpads.clash-verge]
+command = "clash-verge"
+class = "clash-verge"
+animation = "fromTop"
+lazy = false
+size = "50% 50%"
+#+end_src
+#+begin_src conf
+bind = $mainMod, F4, exec, pypr toggle clash-verge
 #+end_src

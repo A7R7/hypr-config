@@ -3,7 +3,7 @@
   "output":["HDMI-A-1"],
   "layer": "top",
   "position": "bottom",
-  "height": 20,
+  "height": 40,
   "include": [
     "$HOME/.config/waybar/modules/hardware",
     "$HOME/.config/waybar/modules/workspace",
@@ -13,6 +13,7 @@
   "modules-left": [
     "custom/spaceleft",
     "wlr/workspaces",
+    "wlr/taskbar",
     "custom/spaceright",
     "custom/empty",
     "custom/media-prev",
@@ -37,7 +38,7 @@
   "output":["DP-2"],
   "layer":"top",
   "position":"bottom",
-  "height":20,
+  "height":40,
   "include": [
     "$HOME/.config/waybar/modules/hardware",
     "$HOME/.config/waybar/modules/clock",
@@ -47,6 +48,7 @@
   "modules-left": [
     "custom/spaceleft",
     "wlr/workspaces",
+    "wlr/taskbar",
     "custom/spaceright",
     "hyprland/submap",
   ],
@@ -65,7 +67,7 @@
   "output":["eDP-1"],
   "layer":"top",
   "position":"bottom",
-  "height":20,
+  "height":30,
   "include": [
     "$HOME/.config/waybar/modules/hardware",
     "$HOME/.config/waybar/modules/clock",
@@ -75,6 +77,7 @@
   "modules-left": [
     "custom/spaceleft",
     "wlr/workspaces",
+    "wlr/taskbar",
     "custom/spaceright",
     "hyprland/submap",
   ],
@@ -89,5 +92,3 @@
   ],
 },
 ]
-
-

@@ -1,6 +1,6 @@
 ; vim:fileencoding=utf-8:foldmethod=marker
 (deflisten ws "scripts/workspace.sh")
-(defvar ws_icon '["", "","","","","","","","","",""]')
+(defvar ws_icon '["", "󰎤","󰎧","󰎪","󰎭","󰎱","󰎳","󰎶","󰎹","󰎼","󰎡"]')
 ;(defvar ws_icon '["", "1","2","3","4","5","6","7","8","9","0"]')
 ;
 
@@ -8,7 +8,7 @@
   (box
     :halign "center" :valign "fill" :space-evenly false :orientation "h"
     :style "${debug}"
-    (box ;indicator 
+    (box ;indicator
       :class "bar-button workspace selector-fg"
       :style "margin-left: ${ 1.3 * (ws[1][monitor][0] - monitor * 10 - 1)}em;
               margin-right:${-1.3 * (ws[1][monitor][0] - monitor * 10 )}em;
@@ -20,16 +20,16 @@
     )
     (for i in ws_entry
       (eventbox ; use eventbox outside of for will cause strange alignment bugs
-        :class "bar-button workspace ${ws[1][monitor][i]}" 
+        :class "bar-button workspace state${ws[1][monitor][i]}"
         :onclick "hyprctl dispatch workspace ${monitor * 10 + i}"
         :onscroll `
           if [[ {} == "up" ]]; then
-            if [ $((${ws[1][monitor][0]} % 10)) -eq 1 ]; then 
-              hyprctl dispatch workspace $((${ws[1][monitor][0]}+9)); 
+            if [ $((${ws[1][monitor][0]} % 10)) -eq 1 ]; then
+              hyprctl dispatch workspace $((${ws[1][monitor][0]}+9));
             else hyprctl dispatch workspace $((${ws[1][monitor][0]}-1)); fi
           else
-            if [ $((${ws[1][monitor][0]} % 10)) -eq 0 ]; then 
-              hyprctl dispatch workspace $((${ws[1][monitor][0]}-9)); 
+            if [ $((${ws[1][monitor][0]} % 10)) -eq 0 ]; then
+              hyprctl dispatch workspace $((${ws[1][monitor][0]}-9));
             else hyprctl dispatch workspace $((${ws[1][monitor][0]}+1)); fi
           fi
         `

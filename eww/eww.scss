@@ -8,7 +8,7 @@
 
 window {
   color: $blu-2;
-  font-family: "Torus Pro", sans-serif;
+  // font-family: "Torus Pro", sans-serif;
   font-size: 20px;
 }
 
@@ -28,10 +28,10 @@ $ease-out-snap: cubic-bezier(0.25, 0.575, 0.565, 1.314);
   transition: color $duration ease-in-out;
 }
 
-.bar { 
-  border: 4px solid rgba(0,50,150,0.7); 
+.bar {
+  border: 4px solid rgba(0,50,150,0.7);
   border-radius: 50px;
-  // border-bottom: 4px solid rgba(0,50,150,0.5); 
+  // border-bottom: 4px solid rgba(0,50,150,0.5);
   // &.active{
   //   background-color: $bg;
   // }
@@ -39,7 +39,7 @@ $ease-out-snap: cubic-bezier(0.25, 0.575, 0.565, 1.314);
 
 .progress-bar {
   // background: linear-gradient(to right, rgba(0,0,0,0), rgb(0, 100, 180));//$lighter;
-  background: linear-gradient(to bottom, rgba(0,80,150,0.5) 0%, rgba(0,80,150,0.1) 50%, rgba(0,80,150,0.5) 100%); 
+  background: linear-gradient(to bottom, rgba(0,80,150,0.5) 0%, rgba(0,80,150,0.1) 50%, rgba(0,80,150,0.5) 100%);
   border-top: 4px solid rgba(10,80,180,1);
   border-bottom: 4px solid rgba(10,80,180,1);
   border-right: 1px solid rgba(10,80,180,0.2);
@@ -74,15 +74,16 @@ $ease-out-snap: cubic-bezier(0.25, 0.575, 0.565, 1.314);
   &.inactive { color: rgb(100, 120, 150); }
   &.workspace {
     &:hover { background: linear-gradient(to bottom, rgba(0,0,0,0) 50%, rgba(255, 255, 255, 0.7)); }
-    &.3 {
+    &.state3 {
       color: cyan;
       transition: 100ms;
       &:hover { color:cyan; }
       &:active { transition: 0s; color: white; }
     }
-    &.2 { color: white; &:hover { color:cyan; } }
-    &.1 { color: white; &:hover { color:cyan; } }
-    &.0 { color: rgb(100, 120, 150); }
+    &.state2 { color: white; &:hover { color:cyan; } }
+    &.state1 { color: white; &:hover { color:cyan; } }
+    &.state0 { color: rgb(100, 120, 150); }
+    &.state { color: rgb(100, 120, 150); }
     &.selector-fg {
       border-bottom: 0.18em solid white;
       transition: 300ms cubic-bezier(0.05, 0.9, 0.1, 1);
@@ -112,12 +113,12 @@ $ease-out-snap: cubic-bezier(0.25, 0.575, 0.565, 1.314);
   border-radius: 1em;
   &.overview {
     transition: -gtk-icon-transform 0.1s linear;
-    
-    &.hide { 
-      -gtk-icon-transform: rotate(180deg); 
+
+    &.hide {
+      -gtk-icon-transform: rotate(180deg);
     }
-    &.show { 
-      -gtk-icon-transform: rotate(0deg); 
+    &.show {
+      -gtk-icon-transform: rotate(0deg);
       &:hover { background: rgba(255, 255, 255, 0.7); }
       border-radius: 1em;
     }
@@ -160,7 +161,7 @@ $ease-out-snap: cubic-bezier(0.25, 0.575, 0.565, 1.314);
   // }}}
 }
 
-.time { 
+.time {
   /// {{{
   // background: $bg;
   // border-radius: 72px 72px 15px 15px;
@@ -239,4 +240,3 @@ $ease-out-snap: cubic-bezier(0.25, 0.575, 0.565, 1.314);
   background-color: $olv-3;
   color: cyan;
 }
-

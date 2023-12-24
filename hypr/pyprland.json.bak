@@ -8,17 +8,12 @@
   "scratchpads": {
     "term": {
       "command": "kitty --class kitty-dropterm",
-      "animation": "fromTop",
+      "animation": "fromRight",
       "lazy": true
     },
-    "files": {
-      "command": "nautilus",
-      "animation": "fromTop",
-      "lazy": true
-    },
-    "dict": {
-      "command": "goldendict",
-      "animation": "fromTop",
+    "term": {
+      "command": "kitty --class kitty-dropterm",
+      "animation": "fromRight",
       "lazy": true
     },
     "tty-clock": {
@@ -32,7 +27,7 @@
       "lazy": true
     },
     "pipes": {
-      "command": "kitty --class kitty-pipes pipes",
+      "command": "kitty --class kitty-pipes pipes-rs",
       "animation": "fromLeft",
       "lazy": true
     },
@@ -41,26 +36,19 @@
       "animation": "fromRight",
       "lazy": true
     },
+    "files": {
+      "command": "nemo --class nemo-pypr",
+      "animation": "fromLeft",
+      "lazy": true
+    },
+    "dict": {
+      "command": "goldendict",
+      "animation": "fromTop",
+      "lazy": true
+    },
     "music": {
       "command": "tauon",
       "animation": "fromTop",
-      "unfocus": "hide",
-      "lazy": true
-    },
-    "volume": {
-      "command": "pavucontrol",
-      "animation": "fromRight",
-      "unfocus": "hide",
-      "lazy": true
-    },
-    "network": {
-      "command": "nm-connection-editor",
-      "animation": "fromRight",
-      "lazy": true
-    },
-    "bluetooth": {
-      "command": "blueman-manager",
-      "animation": "fromLeft",
       "lazy": true
     },
     "clash": {

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 LUNATION0=947182440
 LUNAR_PERIOD=2551443
 

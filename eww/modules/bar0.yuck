@@ -30,7 +30,7 @@
       :style "padding: 0em ${timer-visible ? "1.318" : "0.9" }em; margin: 0 0 0.1em 0; font-size: 1em"
       ; (alarm)
       (clock :child "hour" :text {time.hour} :bool hour-active)
-      (label :text "${cycle-1 == 1 ? "󰔟" : "󱦟"}" 
+      (label :text "${cycle-1 == 1 ? "󰔟" : "󱦟"}"
              :style "font-size: 1.8em; margin-bottom: -0.1em;"
       )
       (clock :child "minute" :text {time.minute} :bool minute-active)
@@ -212,12 +212,12 @@
       :orientation "h"
       :width {round(mon_w[mon_i] * (time.hour * 60 + time.minute) / 1440, 0)}
     )
-    (time-stamp 
-      :mon_i mon_i :h "${weather.sunrise.h}" :m "${weather.sunrise.m}" 
+    (time-stamp
+      :mon_i mon_i :h "${weather.sunrise.h}" :m "${weather.sunrise.m}"
       :icon "󰖜" :desc "sunrise";󰖜
     )
-    (time-stamp 
-      :mon_i mon_i :h "${weather.sunset.h}" :m "${weather.sunset.m}" 
+    (time-stamp
+      :mon_i mon_i :h "${weather.sunset.h}" :m "${weather.sunset.m}"
       :icon "󰖛" :desc "sunset"; 󰖛
     )
   )
@@ -230,7 +230,7 @@
     :valign "center"
     :style "font-size: 1.8em;
             font-family: FiraCode Nerd Font Mono;
-            margin-left: ${round(mon_w[mon_i] * (h * 60 + m) / 1440, 0)}; 
+            margin-left: ${round(mon_w[mon_i] * (h * 60 + m) / 1440, 0)};
             border-top: 2px solid cyan;
             border-bottom: 2px solid cyan;
             ${debug}"
@@ -243,8 +243,12 @@
 )
 
 ;==================================================================================
-(deflisten volume "scripts/volume.sh")
-(deflisten brightness "scripts/brightness.sh")
+;(deflisten volume "scripts/volume.sh")
+(defvar volume '{"value":"50", "microphone":"100"}')
+;(deflisten brightness "scripts/brightness.sh")
+(defvar brightness '{"value":"50"}')
+
+
 (defwidget system []
   ;{{{
   (box
@@ -285,8 +289,8 @@
       :start-at 25
       :class "circular"
       :style "padding: 0px 10px;"
-      (label 
-        :text icon 
+      (label
+        :text icon
         :style "margin: 0.4em; font-family: FiraCode Nerd Font Mono; font-size: 1.2em"
       )
     )
@@ -294,22 +298,55 @@
   ;}}}
 )
 ;==================================================================================
+; (defwidget bar0 []
+;   ;{{{
+;   (overlay
+;     (box
+;       :class "bar ${show_overview ? 'active' : ''}"
+;       :orientation "horizontal" :halign "fill" :valign "fill"
+;       :style "${debug}"
+;     )
+;     (time-progress :mon_i 0)
+;     (centerbox
+;       (box
+;         (box :halign "start"
+;           :space-evenly false
+;           (overview_button)
+;           (separator)
+;           (workspaces :monitor 0)
+;         )
+;         (box :halign "end" (date))
+;       )
+;       (box
+;         (time)
+;       )
+;       (box
+;         (box :halign "start" (weather))
+;         (box :halign "end" (system))
+;       )
+;     )
+;   )
+;   ;}}}
+; )
+
+
 (defwidget bar0 []
   ;{{{
   (overlay
-    (box 
-      :class "bar ${show_overview ? 'active' : ''}" 
+    (box
+      :class "bar ${show_overview ? 'active' : ''}"
       :orientation "horizontal" :halign "fill" :valign "fill"
       :style "${debug}"
     )
     (time-progress :mon_i 0)
     (centerbox
       (box
-        (box :halign "start" 
+        (box :halign "start"
           :space-evenly false
           (overview_button)
           (separator)
-          (workspaces :monitor 0))
+          (workspaces :monitor 0)
+        )
         (box :halign "end" (date))
       )
       (box
@@ -323,3 +360,4 @@
   )
   ;}}}
 )
+

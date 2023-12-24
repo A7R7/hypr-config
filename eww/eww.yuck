@@ -40,6 +40,7 @@
   :monitor 0
   :stacking "bg"
   :exclusive true
+  :focusable true
   :windowtype "dock"
   :geometry (geometry :x "0%" :y "0px" :width "100%" :height "3%" :anchor "bottom center")
   (bar0)
@@ -49,14 +50,17 @@
   :monitor 1
   :stacking "bg"
   :exclusive true
+  :focusable true
   :windowtype "dock"
   :geometry (geometry :x "0%" :y "0px" :width "100%" :height "3%" :anchor "bottom center")
   (bar1)
 )
+
 (defwindow bar2
   :monitor 2
   :stacking "bg"
   :exclusive true
+  :focusable true
   :windowtype "dock"
   :geometry (geometry :x "0%" :y "0px" :width "100%" :height "3%" :anchor "bottom center")
   (bar2)
