@@ -1,0 +1,646 @@
+
+#+title: Ags Configuration
+#+author: A7R7
+#+language:en
+
+#+auto_tangle: t
+#+PROPERTY: header-args:typescript :tangle main.ts :comments link
+* Dependencies
+cava
+wl-copy
+* Import
+#+begin_src typescript
+const { GLib } = imports.gi;
+import { GetClassIcon } from './utils.js';
+import brightness from './brightness.js';
+const hello = () => Widget.Label(' ');
+#+end_src
+
+* Cava
+#+begin_src typescript
+const cava = Variable('', {
+    listen: [['python3', App.configDir + '/cava.py'], out => JSON.parse(out)],
+});
+#+end_src
+
+* COMMENT Taskbar v1
+#+begin_src typescript
+const hyprland = await Service.import('hyprland');
+const clients = hyprland.bind('clients');
+const activeWs = hyprland.active.workspace;
+const activeCli = hyprland.active.client;
+#+end_src
+
+** Client Button
+#+begin_src typescript
+const ClientButton = (client) => {
+    const address = client.address;
+    const mapped = client.mapped;
+    const className = client.class;
+    const title = client.title;
+    return Widget.Box({
+        class_name: 'client',
+        hpack: 'center',
+        child: Widget.Button({
+            on_clicked: () => hyprland.messageAsync(
+                `dispatch focuswindow address:${address}`),
+            on_scroll_up: () => hyprland.messageAsync(
+                `dispatch workspace m-1`),
+            on_scroll_down: () => hyprland.messageAsync(
+                `dispatch workspace m+1`),
+            on_secondary_click: (_, event) => {
+                const MenuItems = [];
+                for (const key in client) {
+                    MenuItems.push(Widget.MenuItem({
+                        child: Widget.Label({
+                            hpack: 'start',
+                            label: `${key} : ${client[key]}`,
+                        }),
+                        on_activate: Utils.execAsync('notify-send hello'),
+                    }))
+                }
+                return Widget.Menu({children: MenuItems,})
+                    .on("notify::visible", (self) => {
+                        if (!self.visible)
+                            self.destroy()}) // prevent gc issues
+                    .popup_at_pointer(event)
+            },
+            child: Widget.Icon({
+                icon: GetClassIcon(className),
+                size: 40,
+            }),
+            tooltip_text: title,
+            setup: self => self.hook(activeCli, () => {
+                self.toggleClassName('active', activeCli.address === address)
+                self.toggleClassName('inactive', activeCli.address != address)
+            }),
+        })
+    })
+}
+#+end_src
+** Workspace
+#+begin_src typescript
+const WorkspaceBox = (cls, id) => Widget.Box({
+    class_name: 'workspace',
+    vertical: true,
+    children: [
+        Widget.Box({
+            hexpand: false,
+            child:Widget.Label({label: id.toString(),})
+        })
+    ].concat(cls.map(ClientButton)),
+    setup: self => self.hook(activeWs, () => {
+        self.toggleClassName("active", activeWs.id === id)
+        self.toggleClassName("inactive", activeWs.id != id)
+    }),
+})
+#+end_src
+** Taskbar
+#+begin_src typescript
+const Taskbar = () => Widget.Box({
+    class_name: 'taskbar',
+    vertical: true,
+    children: clients.as(clients => clients
+        .filter(({ workspace: {id}, class: c }) => c.length > 0 && id > 0 )
+        .reduce((x, cli) => {
+            const id = cli.workspace.id;
+            if (id > 0) {(x[id] = x[id] || []).push(cli);}
+            return x;
+        }, [])
+        .map(WorkspaceBox))
+});
+#+end_src
+
+* Taskbar v2
+** Service
+#+begin_src typescript
+export const hyprland = await Service.import('hyprland');
+const activeWs = hyprland.active.workspace;
+const activeCli = hyprland.active.client;
+const dispatch = cmd => hyprland.messageAsync(`dispatch ${cmd}`);
+
+globalThis.hyprland = hyprland;
+#+end_src
+** Client button
+#+begin_src typescript
+#+end_src
+** Workspace box
+#+begin_src typescript
+const wsLabels = ["󰎤","󰎧","󰎪","󰎭","󰎱","󰎳","󰎶","󰎹","󰎼","󰎡"];
+const WsBox = (id) => {
+    const label = wsLabels[(id - 1) % 10];
+    return Widget.Box({
+        class_name: 'workspace',
+        vertical: true,
+        attribute: { id },
+        children: [
+            Widget.Label({
+                visible: false,
+                attribute: {address: 'label'},
+                class_name: 'nerd-icons',
+                label: label,
+            }),
+        ],
+        setup: self => self
+            .hook(activeWs, () => {
+                self.toggleClassName('active', activeWs.id === id)
+                self.toggleClassName('inactive', activeWs.id != id)
+            })
+    })
+};
+
+#+end_src
+** Normal Taskbar
+#+begin_src typescript
+// manages workspaces in [start, start + length - 1]
+const NormalTaskbar = (start, length) => {
+    const CliButton = (address: string) => {
+        const cli = hyprland.getClient(address);
+        return Widget.Box({
+            class_name: 'client',
+            hpack: 'center',
+            attribute: {address},
+            child: Widget.Button ({
+                on_clicked: () =>
+                    hyprland.messageAsync(`dispatch focuswindow address:${address}`),
+                child: Widget.Icon({
+                    icon: GetClassIcon(cli.class),
+                    size: 32,
+                }),
+                tooltip_text: cli.title,
+            }),
+            setup: self => self.hook(activeCli, () => {
+                self.toggleClassName('active', activeCli.address === cli.address)
+                self.toggleClassName('inactive', activeCli.address != cli.address)
+            }),
+        })
+    };
+    const AddCliBtn = (self, address?: string) => {
+        const id = hyprland.getClient(address).workspace.id;
+        const child = self.children.find(w => w.attribute.id === id);
+        if (child) {
+            child.children = [...child.children, CliButton(address)];
+            print('client-added', address, id)
+        } else {
+            print('client-add-failed', address, id)
+        }
+    };
+    const RemoveCliBtn = (self, address?: string) => {
+        const id = hyprland.getClient(address).workspace.id;
+        const child = self.children.find(w => w.attribute.id === id);
+        if (child) {
+            child.children = child.children
+                .filter(cli => cli.attribute.address !== address)
+            print('client-removed', address, id)
+        } else {
+            print('client-removed-failed', address, id)
+        }
+    };
+    // Assume name === string(id) for normal workspaces.
+    const AddWsBox = (self, name?: string) => {
+        print('workspace-add', name);
+        const id = Number(name); // if name == 'special:xx', Number(name) == NaN.
+        if (!id || id < start || id >= start + length) return;
+        const ws = WsBox(id);
+        var i = self.children.findIndex(ws => ws.attribute.id > id);
+        i = i === -1? self.children.length : i;
+        self.children = self.children.toSpliced(i, 0, ws);
+        print('workspace-added', name, i);
+    };
+    const RemoveWsBox = (self, name?: string) => {
+        print('workspace-remove', name);
+        const id = Number(name);
+        if (!id || id < start || id >= start + length) return;
+        self.children = self.children.filter(ws => ws.attribute.id !== id);
+        print('workspace-removed', name);
+    };
+    return Widget.Box({
+        class_name: "normal taskbar",
+        vertical: true,
+        children: [],
+        setup: self => {
+            hyprland.workspaces.map(ws => AddWsBox(self, ws.name))
+            hyprland.clients.map(cli => AddCliBtn(self, cli.address));
+            self.hook(hyprland, AddWsBox, 'workspace-added')
+                .hook(hyprland, RemoveWsBox, 'workspace-removed')
+                .hook(hyprland, AddCliBtn, 'client-added')
+                .hook(hyprland, RemoveCliBtn, 'client-removed');
+                .hook(hyprland, (w, event?: string) => {
+                    if (event === "movewindow")
+                        w.children = sortItems(w.children)
+                }, "event"),
+        }
+    })
+}
+#+end_src
+** Special Taskbar
+#+begin_src typescript
+const SpecialTaskbar = () => {
+    const CliButton = (address: string, id) => {
+        const cli = hyprland.getClient(address);
+        return Widget.Box({
+            class_name: 'client',
+            hpack: 'center',
+            attribute: {address},
+            child: Widget.Button ({
+                on_clicked: () =>
+                    hyprland.messageAsync(`dispatch togglespecialworkspace ${id}`),
+                child: Widget.Icon({
+                    icon: GetClassIcon(cli.class),
+                    size: 32,
+                }),
+                tooltip_text: cli.title,
+            }),
+            setup: self => self.hook(activeCli, () => {
+                self.toggleClassName('active', activeCli.address === cli.address)
+                self.toggleClassName('inactive', activeCli.address != cli.address)
+            }),
+        })
+    };
+    const AddCliBtn = (self, address?: string) => {
+        const cli = hyprland.getClient(address);
+        const wsName = cli.workspace.name;
+        const match = /:\d+/.exec(wsName);
+        const specialId = match ? match[0].slice(1) : null;
+        const className = cli.class;
+        if (specialId && className) {
+            self.children = [...self.children, CliButton(address, specialId)];
+            print('client-added', address, 'special', specialId)
+        } else {
+            print('client-add-failed', address, 'special:null')
+        }
+    };
+    const RemoveCliBtn = (self, address?: string) => {
+        const id = hyprland.getClient(address).workspace.id;
+        if (id < 0) {
+            self.children =
+                self.children.filter(cli => cli.attribute.address !== address)
+            print('client-removed', address, id)
+        } else {
+            print('client-removed-failed', address, id)
+        }
+    };
+    return Widget.Box({
+        class_name: "special taskbar",
+        vertical: true,
+        children: [],
+        setup: self => {
+            hyprland.clients.map(cli => AddCliBtn(self, cli.address));
+            self.hook(hyprland, AddCliBtn, 'client-added')
+                .hook(hyprland, RemoveCliBtn, 'client-removed');
+        }
+    })
+}
+#+end_src
+* Time
+#+begin_src typescript
+const nowTime = Variable(GLib.DateTime.new_now_local(), {
+    poll: [1000, () => GLib.DateTime.new_now_local()],
+});
+
+const uptime = Variable(0, {
+    poll: [60_000, "cat /proc/uptime", line =>
+        Number.parseInt(line.split(".")[0]) / 60,
+          ],
+});
+
+const FancyClock = () => Widget.Box({
+    class_name: 'clock',
+    vertical: true,
+    children: [
+        Widget.CircularProgress({
+            class_name: 'circular-progress',
+            value: nowTime.bind().as(t => {
+                const hour = t.get_hour();
+                const minute = t.get_minute();
+                const second = t.get_second();
+                const totalSeconds = hour *  3600 + minute *  60 + second;
+                return totalSeconds / 86400;
+            })
+        }),
+        Widget.Label({
+            class_name: 'clock-time',
+            label: nowTime.bind().as(c => c.format('%H:%M'))}),
+        Widget.Separator({ orientation: 1 }),
+        Widget.Label({
+            class_name: 'clock-weekday',
+            label: nowTime.bind().as(c => c.format('%a').toUpperCase()),
+            // css: 'border-top: 1px solid white; font-weight: bold; font-style: italic;',
+        }),
+        Widget.Label({
+            class_name: 'clock-year',
+            label: nowTime.bind().as(c => c.format('%Y'))}),
+        Widget.Label({
+            class_name: 'clock-date',
+            label: nowTime.bind().as(c => c.format('%-m-%-d'))}),
+        // Widget.Calendar({
+        //     hexpand: true,
+        //     hpack: "center",
+        // }),
+    ],
+});
+#+end_src
+* System Tray
+#+begin_src typescript
+const systemtray = await Service.import('systemtray');
+const SysTray = () => Widget.Box({
+    class_name: 'systray',
+    vertical: true,
+    children: systemtray.bind('items').as(items =>
+        items.map(item => Widget.Box({
+            class_name: 'tray-item',
+            hexpand: false,
+            hpack: 'center',
+
+            child: Widget.Button({
+                child: Widget.Icon({
+                    icon: item.bind('icon'),
+                    size: 24,
+                }),
+                on_primary_click: (_, event) => item.activate(event),
+                on_secondary_click: (_, event) => item.openMenu(event),
+                tooltip_markup: item.bind('tooltip_markup'),
+            }),
+        }))
+                                         ),
+});
+#+end_src
+* System Info
+** Bluetooth
+#+begin_src typescript
+const bluetooth = await Service.import('bluetooth')
+
+const ConnectedList = Widget.Box({
+    setup: self => self.hook(bluetooth, self => {
+        self.children = bluetooth.connected_devices
+            .map(({ icon_name, name }) => Widget.Box([
+                Widget.Icon({
+                    icon: icon_name + '-symbolic',
+                    // size: 30,
+                }),
+                Widget.Label(name),
+            ]));
+
+        self.visible = bluetooth.connected_devices.length > 0;
+    }, 'notify::connected-devices'),
+})
+
+const BluetoothIndicator = () => Widget.Icon({
+    icon: bluetooth.bind('enabled').as(on =>
+        `bluetooth-${on ? 'active' : 'disabled'}-symbolic`),
+    size: 24,
+})
+#+end_src
+
+** Network
+#+begin_src typescript
+const network = await Service.import('network');
+const WifiIndicator = () => Widget.Box({
+    vertical: true,
+    tooltip_text: network.wifi.bind('ssid').as(ssid => ssid || 'Unknown'),
+    children: [
+        Widget.Icon({
+            icon: network.wifi.bind('icon_name'),
+            size: 24,
+        }),
+    ],
+});
+const WiredIndicator = () => Widget.Icon({
+    icon: network.wired.bind('icon_name'),
+});
+const NetworkIndicator = () => Widget.Stack({
+    items: [
+        ['wifi', WifiIndicator()],
+        ['wired', WiredIndicator()],
+    ],
+    shown: network.bind('primary').as(p => p || 'wifi'),
+});
+#+end_src
+
+** Audio
+#+begin_src typescript
+export const audio = await Service.import('audio');
+globalThis.audio = audio;
+const audioProgress = (type) => Widget.CircularProgress({
+    class_name: 'circular-progress',
+    visible: true,
+    value: audio[type].bind('volume'),
+    tooltip_text: audio[type].bind('volume').as(v => `Volume ${(100 * v).toFixed(0)}%`),
+    child: Widget.Label({
+        class_name: 'nerd-icons',
+        label: "",
+    }),
+});
+const audioControl = (type = 'speaker') => Widget.EventBox({
+    on_scroll_up: () => audio[type].volume += 0.01,
+    on_scroll_down: () => audio[type].volume -= 0.01,
+    child: audioProgress(type),
+});
+#+end_src
+
+** Brightness
+#+begin_src typescript
+const brightnessIcon = () => Widget.Label({
+    class_name: 'nerd-icons',
+    label: "",
+});
+const brightnessProgress = () => Widget.CircularProgress({
+    class_name: 'circular-progress',
+    visible: true,
+    value: brightness.bind('screen-value'),
+    child: brightnessIcon(),
+});
+const brightnessControl = () => Widget.EventBox({
+    on_scroll_up: () => brightness['screen-value'] += 0.01,
+    on_scroll_down: () => brightness['screen-value'] -= 0.01,
+    child: brightnessProgress(),
+})
+#+end_src
+
+** Battery
+#+begin_src typescript
+const batteryIcon = () => Widget.Label({
+    class_name: 'nerd-icons',
+    label: "󱐌",
+});
+const battery = await Service.import('battery');
+const batteryProgress = () => Widget.CircularProgress({
+    class_name: 'circular-progress',
+    visible: battery.bind('available'),
+    value: battery.bind('percent').as(p => p > 0 ? p / 100 : 0),
+    child: batteryIcon(),
+});
+#+end_src
+
+** System info
+#+begin_src typescript
+const SystemInfo = () => Widget.Box({
+    class_name: 'system-info',
+    vertical: true,
+    spacing: 10,
+    children: [
+        BluetoothIndicator(),
+        NetworkIndicator(),
+        Widget.Separator({ orientation: 1 }),
+        audioControl(),
+        brightnessControl(),
+        batteryProgress(),
+    ],
+});
+#+end_src
+
+* Audio Visualizer
+#+begin_src typescript
+const AudioVisualizer = (id) => Widget.ProgressBar({
+    class_name: 'audio-visualizer',
+    vertical: true,
+    expand: true,
+    value: cava.bind().as(c => c[id]),
+    setup: self => self.set_inverted(true),
+});
+#+end_src
+* Window
+** Left Bar
+#+begin_src typescript
+const barL = () => Widget.Window({
+    name: 'bar-left',
+    class_name: 'bg left',
+    anchor: ['left', 'top', 'bottom'],
+    exclusivity: 'exclusive',
+    monitor: 0,
+    child: Widget.Box({
+        class_name: 'bar left',
+        child: Widget.Overlay({
+            child: Widget.Box({expand: true}),
+            overlays: [
+                AudioVisualizer(0),
+                Widget.CenterBox({
+                    vertical: true,
+                    start_widget: Widget.Box({
+                        vertical: true,
+                        children: [
+                            SysTray(),
+                            Widget.Separator({orientation:1}),
+                        ],
+                    }),
+                    center_widget: NormalTaskbar(1, 10),
+                    end_widget: Widget.Box({
+                        vpack: "end",
+                        vertical: true,
+                        children: [
+                            Widget.Separator({orientation:1}),
+                            SpecialTaskbar(),
+                        ]
+                    })
+                }),
+            ],
+        }),
+    }),
+});
+#+end_src
+
+** Right Bar
+#+begin_src typescript
+const barR = () => Widget.Window({
+    name: 'bar-right',
+    class_name: 'bg right',
+    anchor: ['right', 'top', 'bottom'],
+    exclusivity: 'exclusive',
+    monitor: 0,
+    child: Widget.Box({
+        class_name: 'bar right',
+        child: Widget.Overlay({
+            child: Widget.Box({expand: true}),
+            overlays: [
+                AudioVisualizer(1),
+                Widget.CenterBox({
+                    vertical: true,
+                    start_widget: FancyClock(),
+                    center_widget: hello(),
+                    end_widget: Widget.Box({
+                        vpack: "end",
+                        vertical: true,
+                        children: [
+                            SystemInfo(),
+                        ]
+                    })
+                }),
+            ],
+        })
+    })
+});
+#+end_src
+
+** Top Bottom Bar
+#+begin_src typescript
+const barB = () => Widget.Window({
+    name: 'bar-bottom',
+    class_name: 'bg bottom',
+    exclusivity: 'exclusive',
+    anchor: ['bottom', 'left', 'right'],
+    layer: 'top',
+    child: Widget.Box({css:'min-height: 20px;'}),
+});
+const barT = () => Widget.Window({
+    name: 'bar-top',
+    class_name: 'bg top',
+    exclusivity: 'exclusive',
+    anchor: ['top', 'left', 'right'],
+    layer: 'top',
+    child: Widget.Box({css:'min-height: 20px;'}),
+});
+#+end_src
+* Export
+#+begin_src typescript
+const scss = `${App.configDir}/style.scss`
+const css = `/tmp/ags/style.css`
+Utils.exec(`sassc ${scss} ${css}`)
+Utils.monitorFile(
+    `${App.configDir}`,
+    function() {
+        // compile, reset, apply
+        try {
+            Utils.exec(`sassc ${scss} ${css}`)
+        } catch (error) {
+            console.error(error)
+        }
+        App.resetCss()
+        App.applyCss(css)
+    },
+)
+const setup = Variable(
+    App.applyCss(css)
+)
+
+const windows = [
+    barL(),
+    barR(),
+    barB(),
+    barT(),
+
+];
+export default {
+    windows: windows,
+};
+globalThis.windows = windows
+#+end_src
+
+#+begin_src js :tangle config.js
+const entry = App.configDir + '/main.ts'
+const outdir = '/tmp/ags'
+
+try {
+    await Utils.execAsync([
+        'bun', 'build', entry,
+        '--outdir', outdir,
+        '--external', 'resource://*',
+        '--external', 'gi://*',
+    ])
+} catch (error) {
+    console.error(error)
+}
+
+const main = await import(`file://${outdir}/main.js`)
+
+export default main.default
+#+end_src

@@ -1,0 +1,230 @@
+
+
+* <2024-02-23 Fri>
+I have implemented:
+- 2 vertical bars, on left and right respectively
+- systeminfo widget, containning battery, brightness and audio info (and a little control)
+- a somewhat fancy clock
+- a systray, which is just a copy from the doc
+- a *Taskbar*, implemented using hyprland service
+  It shows all clients grouped by workspaces, in order.
+- a way to retrive icon names from window class, based on the fact that most window's class name is the same as there desktop file.
+
+** Taskbar
+When I am writing the log, the taskbar's code looks like this.
+It can work, but it is not perfect.
+I assigned padding attribute to the client buttons's class, when the button's class changes from inactive to active, for an instant it seems to lose its padding attribute, leading to the taskbar's trembling.
+#+begin_src js
+  const Taskbar = () => Widget.Box({
+    class_name: 'taskbar',
+    vertical: true,
+    children: clients.as(clients => clients
+        .filter(({ workspace: {id}, class: c }) => c.length > 0 && id > 0 )
+        .reduce((x, cl) => {
+            const id = cl.workspace.id;
+            if (id > 0) {(x[id] = x[id] || []).push(cl);}
+            return x;
+        }, [])
+        .map( (cls, id) => Widget.Box({
+            class_name: activeId.as(i => `workspace${i === id ? ' focused' : ''}`),
+            vertical: true,
+            children: [
+                Widget.Button({
+                    on_clicked: () => hyprland.messageAsync(
+                        `dispatch workspace ${id}`),
+                    child: Widget.Label({
+                        // hpack: 'end',
+                        vexpand: false,
+                        hexpand: false,
+                        label: id.toString(),
+                    }),
+                })
+            ].concat(cls.map(
+                ({ address, class: c }) => Widget.Button({
+                    hexpand: false,
+                    on_clicked: () => hyprland.messageAsync(
+                        `dispatch focuswindow address:${address}`),
+                    child: Widget.Icon({
+                        // class_name: ''
+                        icon: GetClassIcon(c),
+                        size: 32,
+                    }),
+                    class_name:
+                    activeAddr.as(a => a === address ? "client active" : "client inactive"),
+                })
+            ))
+        })))
+});
+  #+end_src
+
+
+** CSS
+I have some experience with css when I'm writing eww. However, I don't really figured out how they work.
+And I'm too lazy to read through the very long css documentation.
+Fortunately, I have mistral running on my machine that I can ask for any time.
+
+- Some selectors begin with '.', some do not. what does '.' do?
+> In CSS, a selector that starts with a `.` character is called a class selector. It is used to
+select HTML elements with a specific class attribute in the HTML markup.
+
+- What are the common selectors in css?
+>
+1. Element Selectors: Selects all elements of a particular HTML tag, for example: `p { color:
+red; }` selects all `<p>` elements in the document.
+2. Class Selectors: Selects all elements with a specific class attribute, for example:
+`.my-class { color: blue; }` selects all elements with the class name "my-class".
+3. ID Selectors: Selects an HTML element based on its unique ID attribute, for example: `#my-id
+{ color: green; }` selects the element with the ID "my-id".
+4. Descendant Selectors: Selects all elements that are descendants of a particular element, for
+example: `div p { color: yellow; }` selects all `<p>` elements that are inside `<div>` elements.
+5. Child Selectors: Selects all elements that are the direct children of a particular element,
+for example: `ul > li { margin-left: 20px; }` selects all `<li>` elements that are directly
+under `<ul>` elements.
+6. Adjacent Sibling Selectors: Selects all elements that are adjacent siblings to a particular
+element, for example: `h1 + p { color: gray; }` selects the first `<p>` element that follows an
+`<h1>` element.
+7. General Sibling Selectors: Selects all elements that are siblings of a particular element,
+regardless of their position in the HTML markup, for example: `li ~ li { background-color:
+#f0f0f0; }` selects all `<li>` elements that have the same parent as the selected `<li>`
+element.
+8. Attribute Selectors: Selects all elements with a specific attribute or value of an
+attribute, for example: `input[type="text"] { border: 1px solid #ccc; }` selects all input
+elements with the "text" type attribute.
+9. Pseudo-classes: Selects elements based on their state or relationship to other elements in
+the document, such as hover, visited, active, and focus states. For example: `a:hover { color:
+red; }` selects an `<a>` element when the user hovers over it with the mouse pointer.
+10. Pseudo-elements: Selects specific parts of an element or creates new elements, such as
+before and after pseudo-elements for generating content before or after an element. For example:
+`p::before { content: "Content here"; }` generates the specified content before all `<p>`
+elements in the document.
+
+The most common and easy to use selector is obviously class selectors.
+
+* <2024-02-24 Sat>
+** Taskbar issue reason finded
+The taskbar's item (hyprland client)'s style changes even if I am switching tabs (when the client is emacs or a browser). That is because when switching tabs, the client's title will change, leading to the change being listened by ags, thus refreshing the whole taskbar.
+
+**  Fixed: Tooltip & menu layer
+When setting a window's keymode to 'on-demand' and setting its layer to 'top' (default), the window will steal all the mouse input. This can be fixed by not stating the keymode attribute.
+**
+
+** Bug: Taskbar rightclick menu gc problem
+Have raised a discussion here https://github.com/Aylur/ags/discussions/318.
+
+(com.github.Aylur.ags:466556): Gjs-CRITICAL **: 14:23:13.491: Attempting to call back into JSAPI during the sweeping phase of GC. This is most likely caused by not destroying a Clutter actor or Gtk+ widget with ::destroy signals connected, but can also be caused by using the destroy(), dispose(), or remove() vfuncs. Because it would crash the application, it has been blocked and the JS callback not invoked.
+The offending signal was destroy on Ags_MenuItem 0x182cce0.
+== Stack trace for context 0x1730340 ==
+#0        17f8988 i   resource:///org/gnome/gjs/modules/core/overrides/GLib.js:266 (28a477b7c420 @ 139)
+
+(com.github.Aylur.ags:466556): Gjs-CRITICAL **: 14:23:13.491: Attempting to call back into JSAPI during the sweeping phase of GC. This is most likely caused by not destroying a Clutter actor or Gtk+ widget with ::destroy signals connected, but can also be caused by using the destroy(), dispose(), or remove() vfuncs. Because it would crash the application, it has been blocked and the JS callback not invoked.
+The offending signal was destroy on Ags_Label 0x182c9f0.
+== Stack trace for context 0x1730340 ==
+#0        17f8988 i   resource:///org/gnome/gjs/modules/core/overrides/GLib.js:266 (28a477b7c420 @ 139)
+
+*** Solved
+Adds a invisible destoryment to the widget.
+#+begin_src js
+return Widget.Menu({children: MenuItems,})
+    .on("notify::visible", (self) => {
+        if (!self.visible)
+            self.destroy()}) // prevent gc issues
+    .popup_at_pointer(event)
+#+end_src
+
+** Bug: Taskbar rightclick menu action
+Haven't figured out how to write on_activate, on_select, on_deselect.
+
+** Bug: buttons cannot be aligned using hpack/vpack
+* <2024-02-25 Sun>
+** service signal handling
+The doc isn't very clear on how to handle service signals, especially for those who return some data types.
+
+This code snippet will print all hyprland events.
+#+begin_src js
+hyprland.connect('event', (self, name, data) => {
+    print(name, data);
+})
+#+end_src
+Now I need to catch event name 'workspace'
+
+* <2024-02-26 Mon>
+** Cava
+I have integrated =cava= into my dear shell.
+Now it is not perfect because it depends on external python program to pre-processs raw data from cava.
+#+begin_src js
+const cava = Variable('', {
+    listen: [['python3', App.configDir + '/cava.py'], out => JSON.parse(out)],
+});
+#+end_src
+
+** Min-width
+Found out that the default gtk theme will in fact make min-width not working.
+
+* <2024-02-27 Tue>
+** Seems that Eventbox is not allow to have children, only child.
+
+** This does not work
+it continous to error that cli is undefined, but print('client-added:', address) actually can print the right address. Don't know why.
+Probably because I use =push= and =slice=. Assign a new array does the job.
+#+begin_src js
+export const Taskbar = () => Widget.Box({
+    // on_scroll_up: () => dispatchWs('m+1'),
+    // on_scroll_down: () => dispatchWs('m-1'),
+    vertical: true,
+    children: Array.from({ length: 10 }, (_, i) => i + 1).map(i => Widget.Box({
+        attribute: i,
+        vertical: true,
+        children: [],
+    })),
+    setup: self => self
+        .hook(hyprland.workspaces, () => self.children.forEach(box => {
+            box.visible = hyprland.workspaces.some(ws => ws.id === box.attribute);
+        }))
+        .hook(hyprland, (self, address) => {
+            print('client-added:', address)
+            let cli = hyprland.getClient(address);
+            let id = cli.workspace.id;
+            let cliButton = CliButton(address);
+            self.children[id].children.push(cliButton);
+        }, 'client-added')
+        .hook(hyprland, (self, address) => {
+            print('client-removed:', address)
+            let cli = hyprland.getClient(address);
+            let id = cli.workspace.id;
+            let condition = (btn) => btn.attribute === address;
+            let i = self.children[id].children.findIndex(condition);
+            // self.children[id].children[i].destory();
+            self.children[id].children.splice(i, 1);
+        }, 'client-removed'),
+})
+globalThis.Taskbar = Taskbar;
+#+end_src
+
+* <2024-02-28 Wed>
+** Children Assignment
+This doesn't work at all.
+#+begin_src js
+const wsLabels = ["", "󰎤","󰎧","󰎪","󰎭","󰎱","󰎳","󰎶","󰎹","󰎼","󰎡"];
+const NormalTaskbar = Taskbar()
+    .hook(hyprland, AddCliBtn, 'client-added')
+    .hook(hyprland, RemoveCliBtn, 'client-removed')
+    .hook(hyprland, AddWsBox, 'workspace-added')
+    .hook(hyprland, RemoveWsBox, 'workspace-removed')
+    .children = Array.from({ length: 10}, (_, i) => i + 1).map(id =>
+    Widget.Box({
+        class_name: 'workspace',
+        visible: false,
+        vertical: true ,
+        attribute: { id },
+        children: [
+            Widget.Label({
+                class_name: 'nerd-icons',
+                attribute: {address: 'label'},
+                label: wsLabels[id],
+            }),
+        ]}))
+#+end_src
+** Made a dumb mistake
+I assigned removeclibtn function to 'client-added' event.
+** toggleClassName
+It does not mutate original class names, but append class name on conditions.
