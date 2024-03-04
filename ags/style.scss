@@ -34,7 +34,7 @@ button {
 }
 
 .bar {
-    // background-color: rgba(black, 0.5);
+    background-color: rgba(#11142c, 0.8);
     min-width: 55px;
     margin-top: 20px;
     margin-bottom: 20px;
@@ -56,19 +56,17 @@ button {
     min-height: 20px;
 }
 
-.audio-visualizer {
-    min-width: 50px;
-}
 progressbar {
-    background-color: rgba(#11142c, 0.8);
-    border-radius: 15px;
+    /* border: 1px solid $fg; */
+    border-radius: 10px;
 }
-progressbar trough, progress {
+progressbar trough {
     min-height: 0px;
-    // border-radius: 20px;
+    border-radius: 20px;
 }
 progressbar progress{
-    min-width: 120px;
+    min-width: 50px;
+    // animation-duration: 100ms;
     background-image: linear-gradient(to top, rgba(blue, 0.1), rgba($fg, 0.9));
 }
 

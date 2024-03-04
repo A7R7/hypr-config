@@ -6,14 +6,16 @@
 #+auto_tangle: t
 #+PROPERTY: header-args:typescript :tangle main.ts :comments link
 * Dependencies
-cava
-wl-copy
+- cava :: used by audio visualizer.
+- wl-clipboard :: used to copy to clipboard.
+
 * Import
 #+begin_src typescript
 const { GLib } = imports.gi;
+import Gtk from 'gi://Gtk?version=3.0';
 import { GetClassIcon } from './utils.js';
 import brightness from './brightness.js';
-const hello = () => Widget.Label(' ');
+const hello = Widget.Label(' ');
 #+end_src
 
 * Cava
@@ -80,7 +82,7 @@ const ClientButton = (client) => {
 #+end_src
 ** Workspace
 #+begin_src typescript
-const WorkspaceBox = (cls, id) => Widget.Box({
+const WorkspaceBox = (clis, id) => Widget.Box({
     class_name: 'workspace',
     vertical: true,
     children: [
@@ -88,7 +90,7 @@ const WorkspaceBox = (cls, id) => Widget.Box({
             hexpand: false,
             child:Widget.Label({label: id.toString(),})
         })
-    ].concat(cls.map(ClientButton)),
+    ].concat(clis.map(ClientButton)),
     setup: self => self.hook(activeWs, () => {
         self.toggleClassName("active", activeWs.id === id)
         self.toggleClassName("inactive", activeWs.id != id)
@@ -111,7 +113,7 @@ const Taskbar = () => Widget.Box({
 });
 #+end_src
 
-* Taskbar v2
+* COMMENT Taskbar v2
 ** Service
 #+begin_src typescript
 export const hyprland = await Service.import('hyprland');
@@ -120,9 +122,6 @@ const activeCli = hyprland.active.client;
 const dispatch = cmd => hyprland.messageAsync(`dispatch ${cmd}`);
 
 globalThis.hyprland = hyprland;
-#+end_src
-** Client button
-#+begin_src typescript
 #+end_src
 ** Workspace box
 #+begin_src typescript
@@ -291,6 +290,319 @@ const SpecialTaskbar = () => {
         }
     })
 }
+#+end_src
+* COMMENT Taskbar v3
+ v3 is derived from v1
+** Service
+#+begin_src typescript
+export const hyprland = await Service.import('hyprland');
+const clients = hyprland.clients;
+const workspaces = hyprland.workspaces;
+const activeWs = hyprland.active.workspace;
+const activeCli = hyprland.active.client;
+
+globalThis.hyprland = hyprland;
+
+#+end_src
+** Workspace Box
+#+begin_src typescript
+const WsBox = (id) => {
+    const name = hyprland.getWorkspace(id).name;
+    const wsBox = Widget.Box({
+        class_name: 'workspace',
+        vertical: true,
+        setup: self => self
+            .hook(activeWs, () => {
+                self.toggleClassName("active", activeWs.id === id)
+                self.toggleClassName("inactive", activeWs.id != id)
+            })
+            .ref() // increase reference by 1 to prevent disposal
+    })
+    print('new wsbox', id)
+    print('    ', wsBox);
+    return wsBox;
+}
+#+end_src
+
+The WsHolder is a Gobject that prevents its children's reference count dropping to zero, thus being disposed.
+It will not be shown on the shell.
+#+begin_src typescript
+const nameToWsBox = new Map();
+#+end_src
+
+There is no need to clear out unused workspace box, because natually the number of workspaces is quite limited.
+#+begin_src typescript
+hyprland.connect('workspace-removed', (self, name: string) => {
+    print('remove ws box', name);
+    // nameToWsBox.get(name).destroy(); // already been disposed
+    nameToWsBox.delete(name);
+});
+#+end_src
+
+** Client Button
+#+begin_src typescript
+const addrToCliBtn = new Map();
+hyprland.connect('client-removed', (self, address: string) => {
+    print('remove clibtn', address);
+    addrToCliBtn.delete(address);
+});
+// for client-added, they are handdled when mapping
+#+end_src
+#+begin_src typescript
+const CliBtn = (address: string) => {
+    const cli = hyprland.getClient(address);
+    // print('cli-added', address);
+    const cliBtn = Widget.Box({
+        class_name: 'client',
+        hpack: 'center',
+        attribute: {address},
+        child: Widget.Button ({
+            on_clicked: () => {
+                let id = hyprland.getClient(address).workspace.id
+                id < 0
+                    ? hyprland.messageAsync(`dispatch togglespecialworkspace ${id + 99}`)
+                    : hyprland.messageAsync(`dispatch focuswindow address:${address}`)
+            }
+            child: Widget.Icon({
+                icon: GetClassIcon(cli.class),
+                size: 32,
+            }),
+            tooltip_text: cli.title,
+        }),
+        setup: self => self
+            .hook(activeCli, () => {
+                self.toggleClassName('active', activeCli.address === address)
+                self.toggleClassName('inactive', activeCli.address != address)
+            })
+    });
+    print('new clibtn', address);
+    print('   ', cliBtn)
+    return cliBtn;
+};
+#+end_src
+** Taskbar
+#+begin_src typescript
+const wsLabels = ["󰎤","󰎧","󰎪","󰎭","󰎱","󰎳","󰎶","󰎹","󰎼","󰎡"];
+
+const Taskbar = (start, length, className, showLabel) => {
+    const update = (clis, wss) => {
+        print("update begin------------------------")
+        const newClis = clis.filter(({ workspace: {id}, class: c }) =>
+            c && (id >= start) && (id <= start + length - 1));
+        const newWss = wss.filter(({id}) =>
+            (id >= start) && (id <= start + length - 1))
+        const arr = [];
+        newWss.map(ws => arr[ws.id - start] = []);
+        newClis.map(cli => arr[cli.workspace.id - start].push(cli.address));
+        const ret = arr.map((addrs: string[], i: number) => {
+            const id: number = i + start;
+            const name: string = hyprland.getWorkspace(id).name;
+            if (!nameToWsBox.has(name)) {
+                nameToWsBox.set(name, WsBox(id));
+            } else {
+                print('pick wsbox', name);
+            }
+            const wsBox = nameToWsBox.get(name);
+            const cliBtns = addrs.map(addr => {
+                if (!addrToCliBtn.has(addr)) {
+                    addrToCliBtn.set(addr, CliBtn(addr));
+                } else {
+                    print('pick clibtn', addr);
+                }
+                return addrToCliBtn.get(addr);
+            })
+            if (wsBox) {
+                wsBox.children = showLabel
+                    ? [ Widget.Label(wsLabels[i]), ...cliBtns ]
+                    : cliBtns;
+            }
+            return wsBox;
+        })
+        print("update end--------------------------")
+        return ret;
+    };
+
+    return Widget.Box({
+        class_name: className,
+        vertical: true,
+        setup: self => {
+            ['client-added', 'client-removed',
+             'workspace-added', 'workspace-removed'] .forEach(
+                 e => self.hook(
+                     hyprland,
+                     (self, arg1) => {
+                         if (arg1) {
+                             print(e, arg1);
+                             self.children = update(hyprland.clients, hyprland.workspaces)
+                         }
+                     },
+                     e)
+             );
+
+            self.hook(hyprland, (w, event?: string, ...etc) => {
+                if (event === "movewindow") {
+                    print(event, ...etc)
+                    self.children = update(hyprland.clients, hyprland.workspaces)
+                }
+            }, "event");
+
+            self.children = update(hyprland.clients, hyprland.workspaces)
+        }})
+}
+#+end_src
+
+#+begin_src typescript
+const normalTaskbar = Taskbar(1, 10, `taskbar normal`, true);
+const specialTaskbar = Taskbar(-98, 10, `taskbar special`, false);
+#+end_src
+* Taskbar v4
+v4 is derived from v2
+** Service
+#+begin_src typescript
+export const hyprland = await Service.import('hyprland');
+const activeWs = hyprland.active.workspace;
+const activeCli = hyprland.active.client;
+const dispatch = cmd => hyprland.messageAsync(`dispatch ${cmd}`);
+
+globalThis.hyprland = hyprland;
+#+end_src
+** Workspace box
+#+begin_src typescript
+const WsBox = (id, label?) => {
+    return Widget.Box({
+        class_name: 'workspace',
+        vertical: true,
+        attribute: { id },
+        children: label ? [
+            Widget.Label({
+                attribute: {address: 'label'},
+                class_name: 'nerd-icons',
+                label: label,
+            }), ] : [],
+        setup: self => self
+            .hook(activeWs, () => {
+                self.toggleClassName('active', activeWs.id === id)
+                self.toggleClassName('inactive', activeWs.id != id)
+            })
+    })
+};
+
+#+end_src
+** Client Button
+#+begin_src typescript
+const CliBtn = (address: string) => {
+    const cli = hyprland.getClient(address);
+    // print('cli-added', address);
+    const cliBtn = Widget.Box({
+        class_name: 'client',
+        hpack: 'center',
+        attribute: {address},
+        child: Widget.Button ({
+            on_clicked: () => {
+                let id = hyprland.getClient(address).workspace.id
+                id < 0
+                    ? hyprland.messageAsync(`dispatch togglespecialworkspace ${id + 99}`)
+                    : hyprland.messageAsync(`dispatch focuswindow address:${address}`)
+            },
+            child: Widget.Icon({
+                icon: GetClassIcon(cli.class),
+                size: 32,
+            }),
+            tooltip_text: cli.title,
+        }),
+        setup: self => self
+            .hook(activeCli, () => {
+                self.toggleClassName('active', activeCli.address === address)
+                self.toggleClassName('inactive', activeCli.address != address)
+            })
+    });
+    print('new clibtn', address);
+    print('   ', cliBtn)
+    return cliBtn;
+};
+#+end_src
+** Taskbar
+#+begin_src typescript
+// manages workspaces in [start, start + length - 1]
+const addrToWsId = new Map();
+const getWsId = (wsName: string) => {
+    // Assume name === string(id) for normal workspaces.
+    const match = /:\d+/.exec(wsName);
+    return match ? (Number(match[0].slice(1)) - 99) : (Number(wsName));
+}
+const wsLabels = ["󰎤","󰎧","󰎪","󰎭","󰎱","󰎳","󰎶","󰎹","󰎼","󰎡"];
+const Taskbar = (start, length, className, showLabel) => {
+    const AddCliBtn = (self, address: string) => {
+        if (!address) return;
+        let id = hyprland.getClient(address).workspace.id;
+        if (id < start || id >= start + length) return;
+        addrToWsId.set(address, id);
+        const child = self.children.find(w => w.attribute.id === id);
+        if (child) {
+            child.children = [...child.children, CliBtn(address)];
+            print('client-added', address, id)
+        } else {
+            print('client-add-failed', address, id)
+        }
+    };
+    const RemoveCliBtn = (self, address: string) => {
+        if (!address) return;
+        let id = addrToWsId.get(address);
+        if (!id) return;
+        addrToWsId.delete(address);
+        const child = self.children.find(w => w.attribute.id === id);
+        if (child) {
+            child.children = child.children
+                .filter(cli => cli.attribute.address !== address)
+            print('client-removed', address, id)
+        } else {
+            print('client-removed-failed', address, id)
+        }
+    };
+    const AddWsBox = (self, name?: string) => {
+        const id = getWsId(name);
+        if (!id || id < start || id >= start + length) return;
+        const ws = WsBox(id, showLabel? wsLabels[id - start] : null);
+        let i = self.children.findIndex(ws => ws.attribute.id > id);
+        i = i === -1? self.children.length : i;
+        self.children = self.children.toSpliced(i, 0, ws);
+        print('workspace-added', name, i);
+    };
+    const RemoveWsBox = (self, name?: string) => {
+        const id = getWsId(name);
+        if (!id || id < start || id >= start + length) return;
+        self.children = self.children.filter(ws => ws.attribute.id !== id);
+        print('workspace-removed', id);
+    };
+    return Widget.Box({
+        class_name: className,
+        vertical: true,
+        children: [],
+        setup: self => {
+            hyprland.workspaces.map(ws => AddWsBox(self, ws.name));
+            hyprland.clients.map(cli => AddCliBtn(self, cli.address));
+            self.hook(hyprland, AddWsBox, 'workspace-added')
+                .hook(hyprland, RemoveWsBox, 'workspace-removed')
+                .hook(hyprland, AddCliBtn, 'client-added')
+                .hook(hyprland, RemoveCliBtn, 'client-removed')
+                .hook(hyprland, (w, event, params) => {
+                    if (event === "movewindow") {
+                        const argv = params.split(',');
+                        const address = '0x' + argv[0];
+                        const id = getWsId(argv[1]);
+                        print(event, address, id);
+                        if (id < start || id >= start + length) return;
+                        RemoveCliBtn(self, address);
+                        AddCliBtn(self, address, id);
+                    }
+                }, "event");
+        }
+    })
+}
+#+end_src
+#+begin_src typescript
+const normalTaskbar = Taskbar(1, 10, 'normal taskbar', true);
+const specialTaskbar = Taskbar(-98, 10, 'special taskbar', false);
 #+end_src
 * Time
 #+begin_src typescript
@@ -523,13 +835,13 @@ const barL = () => Widget.Window({
                             Widget.Separator({orientation:1}),
                         ],
                     }),
-                    center_widget: NormalTaskbar(1, 10),
+                    center_widget: normalTaskbar,
                     end_widget: Widget.Box({
                         vpack: "end",
                         vertical: true,
                         children: [
                             Widget.Separator({orientation:1}),
-                            SpecialTaskbar(),
+                            specialTaskbar,
                         ]
                     })
                 }),
@@ -556,11 +868,12 @@ const barR = () => Widget.Window({
                 Widget.CenterBox({
                     vertical: true,
                     start_widget: FancyClock(),
-                    center_widget: hello(),
+                    center_widget: hello,
                     end_widget: Widget.Box({
                         vpack: "end",
                         vertical: true,
                         children: [
+                            hello,
                             SystemInfo(),
                         ]
                     })

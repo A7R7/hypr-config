@@ -228,3 +228,258 @@ const NormalTaskbar = Taskbar()
 I assigned removeclibtn function to 'client-added' event.
 ** toggleClassName
 It does not mutate original class names, but append class name on conditions.
+* <2024-03-01 Fri>
+** Current state of taskbar
+It is still not perfect. Especially for the window move part, it's really hard to implement this based on signal listening from hyprland service, mainly because the ~windowmove~ event do not show which window address is moved. So I'm planning to implement another version of taskbar.
+*** Service
+#+begin_src typescript
+export const hyprland = await Service.import('hyprland');
+const activeWs = hyprland.active.workspace;
+const activeCli = hyprland.active.client;
+const dispatch = cmd => hyprland.messageAsync(`dispatch ${cmd}`);
+
+globalThis.hyprland = hyprland;
+#+end_src
+*** Workspace box
+#+begin_src typescript
+const wsLabels = ["󰎤","󰎧","󰎪","󰎭","󰎱","󰎳","󰎶","󰎹","󰎼","󰎡"];
+const WsBox = (id) => {
+    const label = wsLabels[(id - 1) % 10];
+    return Widget.Box({
+        class_name: 'workspace',
+        vertical: true,
+        attribute: { id },
+        children: [
+            Widget.Label({
+                visible: false,
+                attribute: {address: 'label'},
+                class_name: 'nerd-icons',
+                label: label,
+            }),
+        ],
+        setup: self => self
+            .hook(activeWs, () => {
+                self.toggleClassName('active', activeWs.id === id)
+                self.toggleClassName('inactive', activeWs.id != id)
+            })
+    })
+};
+
+#+end_src
+*** Normal Taskbar
+#+begin_src typescript
+// manages workspaces in [start, start + length - 1]
+const NormalTaskbar = (start, length) => {
+    const CliButton = (address: string) => {
+        const cli = hyprland.getClient(address);
+        return Widget.Box({
+            class_name: 'client',
+            hpack: 'center',
+            attribute: {address},
+            child: Widget.Button ({
+                on_clicked: () =>
+                    hyprland.messageAsync(`dispatch focuswindow address:${address}`),
+                child: Widget.Icon({
+                    icon: GetClassIcon(cli.class),
+                    size: 32,
+                }),
+                tooltip_text: cli.title,
+            }),
+            setup: self => self.hook(activeCli, () => {
+                self.toggleClassName('active', activeCli.address === cli.address)
+                self.toggleClassName('inactive', activeCli.address != cli.address)
+            }),
+        })
+    };
+    const AddCliBtn = (self, address?: string) => {
+        const id = hyprland.getClient(address).workspace.id;
+        const child = self.children.find(w => w.attribute.id === id);
+        if (child) {
+            child.children = [...child.children, CliButton(address)];
+            print('client-added', address, id)
+        } else {
+            print('client-add-failed', address, id)
+        }
+    };
+    const RemoveCliBtn = (self, address?: string) => {
+        const id = hyprland.getClient(address).workspace.id;
+        const child = self.children.find(w => w.attribute.id === id);
+        if (child) {
+            child.children = child.children
+                .filter(cli => cli.attribute.address !== address)
+            print('client-removed', address, id)
+        } else {
+            print('client-removed-failed', address, id)
+        }
+    };
+    // Assume name === string(id) for normal workspaces.
+    const AddWsBox = (self, name?: string) => {
+        print('workspace-add', name);
+        const id = Number(name); // if name == 'special:xx', Number(name) == NaN.
+        if (!id || id < start || id >= start + length) return;
+        const ws = WsBox(id);
+        var i = self.children.findIndex(ws => ws.attribute.id > id);
+        i = i === -1? self.children.length : i;
+        self.children = self.children.toSpliced(i, 0, ws);
+        print('workspace-added', name, i);
+    };
+    const RemoveWsBox = (self, name?: string) => {
+        print('workspace-remove', name);
+        const id = Number(name);
+        if (!id || id < start || id >= start + length) return;
+        self.children = self.children.filter(ws => ws.attribute.id !== id);
+        print('workspace-removed', name);
+    };
+    return Widget.Box({
+        class_name: "normal taskbar",
+        vertical: true,
+        children: [],
+        setup: self => {
+            hyprland.workspaces.map(ws => AddWsBox(self, ws.name))
+            hyprland.clients.map(cli => AddCliBtn(self, cli.address));
+            self.hook(hyprland, AddWsBox, 'workspace-added')
+                .hook(hyprland, RemoveWsBox, 'workspace-removed')
+                .hook(hyprland, AddCliBtn, 'client-added')
+                .hook(hyprland, RemoveCliBtn, 'client-removed');
+                .hook(hyprland, (w, event?: string) => {
+                    if (event === "movewindow")
+                        w.children = sortItems(w.children)
+                }, "event"),
+        }
+    })
+}
+#+end_src
+*** Special Taskbar
+#+begin_src typescript
+const SpecialTaskbar = () => {
+    const CliButton = (address: string, id) => {
+        const cli = hyprland.getClient(address);
+        return Widget.Box({
+            class_name: 'client',
+            hpack: 'center',
+            attribute: {address},
+            child: Widget.Button ({
+                on_clicked: () =>
+                    hyprland.messageAsync(`dispatch togglespecialworkspace ${id}`),
+                child: Widget.Icon({
+                    icon: GetClassIcon(cli.class),
+                    size: 32,
+                }),
+                tooltip_text: cli.title,
+            }),
+            setup: self => self.hook(activeCli, () => {
+                self.toggleClassName('active', activeCli.address === cli.address)
+                self.toggleClassName('inactive', activeCli.address != cli.address)
+            }),
+        })
+    };
+    const AddCliBtn = (self, address?: string) => {
+        const cli = hyprland.getClient(address);
+        const wsName = cli.workspace.name;
+        const match = /:\d+/.exec(wsName);
+        const specialId = match ? match[0].slice(1) : null;
+        const className = cli.class;
+        if (specialId && className) {
+            self.children = [...self.children, CliButton(address, specialId)];
+            print('client-added', address, 'special', specialId)
+        } else {
+            print('client-add-failed', address, 'special:null')
+        }
+    };
+    const RemoveCliBtn = (self, address?: string) => {
+        const id = hyprland.getClient(address).workspace.id;
+        if (id < 0) {
+            self.children =
+                self.children.filter(cli => cli.attribute.address !== address)
+            print('client-removed', address, id)
+        } else {
+            print('client-removed-failed', address, id)
+        }
+    };
+    return Widget.Box({
+        class_name: "special taskbar",
+        vertical: true,
+        children: [],
+        setup: self => {
+            hyprland.clients.map(cli => AddCliBtn(self, cli.address));
+            self.hook(hyprland, AddCliBtn, 'client-added')
+                .hook(hyprland, RemoveCliBtn, 'client-removed');
+        }
+    })
+}
+#+end_src
+***
+* <2024-03-02 Sat>
+** Taskbar v3
+This is my new version of taskbar. It has serious gc problems, otherwise I'm very satisfied with it!
+#+begin_src typescript
+const wsLabels = ["󰎤","󰎧","󰎪","󰎭","󰎱","󰎳","󰎶","󰎹","󰎼","󰎡"];
+const Taskbar = (start, length, className, showLabel) => Widget.Box({
+    class_name: className,
+    vertical: true,
+    children: hyprland.bind('clients').as(clis => {
+        const arr = [];
+        active
+        clis.filter(({ workspace: {id}, class: c }) =>
+            c && (id >= start) && (id <= start + length - 1))
+            .reduce((x, cli) => {
+                let id = cli.workspace.id;
+                (x[id - start] = x[id - start] || []).push(cli.address);
+                return x;
+            }, [])
+            .map( (addrs, i) => {
+                const id = i + start;
+                const name = hyprland.getWorkspace(id).name;
+                if (!nameToWsBox.has(name)) {
+                    print('new ws box', name);
+                    nameToWsBox.set(name, WsBox(id));
+                } else {
+                    print('reuse ws box', name);
+                }
+                const wsBox = nameToWsBox.get(name);
+                wsBox.children = (showLabel ? [
+                    Widget.Box({
+                        child:Widget.Label({label: wsLabels[i]})
+                    })] : []).concat(
+                        addrs.map( addr => {
+                            if (!addrToCliBtn.has(addr)) {
+                                print('new cli btn', addr);
+                                addrToCliBtn.set(addr, CliBtn(addr));
+                            } else {
+                                print('reuse cli btn', addr);
+                            }
+                            return addrToCliBtn.get(addr);
+                        }))
+                return wsBox;
+            })
+    })
+});
+
+const normalTaskbar = Taskbar(1, 10, `taskbar normal`, true);
+const specialTaskbar = Taskbar(-98, 10, `taskbar special`, false);
+#+end_src
+** widgets got disposed
+When Gwidget's reference count drops to zero, it will be disposed.
+If a Gwidget is inside a Gobject, it still counts as one reference count.
+*However, storing the widget to something like Map does not count.*
+
+This is why I meet gc errors: I map a key to a widget, the widget got desposed, and I tried to access that widget, and I got the error.
+
+** A dumb way to prevent widgets from getting disposed
+Add them to anther GContainer.
+This will warn like below, and possibly don't work.
+#+begin_example
+(com.github.Aylur.ags:200682): Gtk-WARNING **: 17:14:54.294: Attempting to add a widget with type Ags_Box to a container of type Ags_Box, but the widget is already inside a container of type GtkFrame, please remove the widget from its existing container first.
+#+end_example
+
+* <2024-03-03 Sun>
+** Taskbar v4
+I gave up on v3 for the complexity of widget disposal.
+V4 is based on V2.
+** Can not launch ags or reboot
+After hundreds of times restarting ags, it suddenly won't start,
+And I cannot reboot using command line.
+* <2024-03-04 Mon>
+** read_uint16_async
+There is only read_uint16, no async version of it.
+Therefore, I have to implement it.

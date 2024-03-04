@@ -1,17 +1,12 @@
-// [[file:readme.org::*Import][Import:1]]
+// * imports
 const { GLib } = imports.gi;
+import Gtk from 'gi://Gtk?version=3.0';
 import { GetClassIcon } from './utils.js';
 import brightness from './brightness.js';
-const hello = () => Widget.Label(' ');
-// Import:1 ends here
-
-// [[file:readme.org::*Cava][Cava:1]]
-const cava = Variable('', {
-    listen: [['python3', App.configDir + '/cava.py'], out => JSON.parse(out)],
-});
-// Cava:1 ends here
-
-// [[file:readme.org::*Service][Service:1]]
+import { Cava } from './cava.js'
+const hello = Widget.Label(' ');
+// * Taskbar
+// ** Hyprland
 export const hyprland = await Service.import('hyprland');
 const activeWs = hyprland.active.workspace;
 const activeCli = hyprland.active.client;
@@ -20,26 +15,18 @@ const dispatch = cmd => hyprland.messageAsync(`dispatch ${cmd}`);
 globalThis.hyprland = hyprland;
 // Service:1 ends here
 
-// [[file:readme.org::*Client button][Client button:1]]
-
-// Client button:1 ends here
-
-// [[file:readme.org::*Workspace box][Workspace box:1]]
-const wsLabels = ["󰎤","󰎧","󰎪","󰎭","󰎱","󰎳","󰎶","󰎹","󰎼","󰎡"];
-const WsBox = (id) => {
-    const label = wsLabels[(id - 1) % 10];
+// ** Workspace Box
+const WsBox = (id, label?) => {
     return Widget.Box({
         class_name: 'workspace',
         vertical: true,
         attribute: { id },
-        children: [
+        children: label ? [
             Widget.Label({
-                visible: false,
                 attribute: {address: 'label'},
                 class_name: 'nerd-icons',
                 label: label,
-            }),
-        ],
+            }), ] : [],
         setup: self => self
             .hook(activeWs, () => {
                 self.toggleClassName('active', activeWs.id === id)
@@ -47,45 +34,67 @@ const WsBox = (id) => {
             })
     })
 };
-// Workspace box:1 ends here
 
-// [[file:readme.org::*Normal Taskbar][Normal Taskbar:1]]
-// manages workspaces in [start, start + length - 1]
-const NormalTaskbar = (start, length) => {
-    const CliButton = (address: string) => {
-        const cli = hyprland.getClient(address);
-        return Widget.Box({
-            class_name: 'client',
-            hpack: 'center',
-            attribute: {address},
-            child: Widget.Button ({
-                on_clicked: () =>
-                    hyprland.messageAsync(`dispatch focuswindow address:${address}`),
-                child: Widget.Icon({
-                    icon: GetClassIcon(cli.class),
-                    size: 32,
-                }),
-                tooltip_text: cli.title,
+// ** Client Button
+const CliBtn = (address: string) => {
+  const cli = hyprland.getClient(address);
+    // print('cli-added', address);
+    const cliBtn = Widget.Box({
+        class_name: 'client',
+        hpack: 'center',
+        attribute: {address},
+        child: Widget.Button ({
+            on_clicked: () => {
+                let id = hyprland.getClient(address).workspace.id
+                id < 0
+                    ? hyprland.messageAsync(`dispatch togglespecialworkspace ${id + 99}`)
+                    : hyprland.messageAsync(`dispatch focuswindow address:${address}`)
+            },
+            child: Widget.Icon({
+                icon: GetClassIcon(cli.class),
+                size: 32,
             }),
-            setup: self => self.hook(activeCli, () => {
-                self.toggleClassName('active', activeCli.address === cli.address)
-                self.toggleClassName('inactive', activeCli.address != cli.address)
-            }),
-        })
-    };
-    const AddCliBtn = (self, address?: string) => {
-        const id = hyprland.getClient(address).workspace.id;
+            tooltip_text: cli.title,
+        }),
+        setup: self => self
+            .hook(activeCli, () => {
+                self.toggleClassName('active', activeCli.address === address)
+                self.toggleClassName('inactive', activeCli.address != address)
+            })
+    });
+    print('new clibtn', address);
+    print('   ', cliBtn)
+    return cliBtn;
+};
+
+// ** Taskbar
+const addrToWsId = new Map();
+const getWsId = (wsName: string) => {
+    // Assume name === string(id) for normal workspaces.
+    const match = /:\d+/.exec(wsName);
+    return match ? (Number(match[0].slice(1)) - 99) : (Number(wsName));
+}
+const wsLabels = ["󰎤","󰎧","󰎪","󰎭","󰎱","󰎳","󰎶","󰎹","󰎼","󰎡"];
+const Taskbar = (start, length, className, showLabel) => {
+    const AddCliBtn = (self, address: string) => {
+        if (!address) return;
+        let id = hyprland.getClient(address).workspace.id;
+        if (id < start || id >= start + length) return;
+        addrToWsId.set(address, id);
         const child = self.children.find(w => w.attribute.id === id);
         if (child) {
-            child.children = [...child.children, CliButton(address)];
+            child.children = [...child.children, CliBtn(address)];
             print('client-added', address, id)
         } else {
             print('client-add-failed', address, id)
         }
     };
-    const RemoveCliBtn = (self, address?: string) => {
-        const id = hyprland.getClient(address).workspace.id;
-        const child = self.children.find(w => w.attribute.id === id);
+    const RemoveCliBtn = (self, address: string) => {
+        if (!address) return;
+        let id = addrToWsId.get(address);
+        if (!id) return;
+        addrToWsId.delete(address);
+        const child = self.children.find(ws => ws.attribute.id === id);
         if (child) {
             child.children = child.children
                 .filter(cli => cli.attribute.address !== address)
@@ -94,100 +103,52 @@ const NormalTaskbar = (start, length) => {
             print('client-removed-failed', address, id)
         }
     };
-    // Assume name === string(id) for normal workspaces.
     const AddWsBox = (self, name?: string) => {
-        print('workspace-add', name);
-        const id = Number(name); // if name == 'special:xx', Number(name) == NaN.
+        const id = getWsId(name);
         if (!id || id < start || id >= start + length) return;
-        const ws = WsBox(id);
-        var i = self.children.findIndex(ws => ws.attribute.id > id);
+        const ws = WsBox(id, showLabel? wsLabels[id - start] : null);
+        let i = self.children.findIndex(ws => ws.attribute.id > id);
         i = i === -1? self.children.length : i;
         self.children = self.children.toSpliced(i, 0, ws);
         print('workspace-added', name, i);
     };
     const RemoveWsBox = (self, name?: string) => {
-        print('workspace-remove', name);
-        const id = Number(name);
+        const id = getWsId(name);
         if (!id || id < start || id >= start + length) return;
         self.children = self.children.filter(ws => ws.attribute.id !== id);
-        print('workspace-removed', name);
+        print('workspace-removed', id);
     };
     return Widget.Box({
-        class_name: "normal taskbar",
+        class_name: className,
         vertical: true,
         children: [],
         setup: self => {
-            hyprland.workspaces.map(ws => AddWsBox(self, ws.name))
+            hyprland.workspaces.map(ws => AddWsBox(self, ws.name));
             hyprland.clients.map(cli => AddCliBtn(self, cli.address));
             self.hook(hyprland, AddWsBox, 'workspace-added')
                 .hook(hyprland, RemoveWsBox, 'workspace-removed')
                 .hook(hyprland, AddCliBtn, 'client-added')
-                .hook(hyprland, RemoveCliBtn, 'client-removed');
+                .hook(hyprland, RemoveCliBtn, 'client-removed')
+                .hook(hyprland, (w, event, params) => {
+                    if (event === "movewindow") {
+                        const argv = params.split(',');
+                        const address = '0x' + argv[0];
+                        const id = getWsId(argv[1]);
+                        print(event, address, id);
+                        if (id < start || id >= start + length) return;
+                        RemoveCliBtn(self, address);
+                        AddCliBtn(self, address, id);
+                    }
+                }, "event");
         }
     })
 }
-// Normal Taskbar:1 ends here
 
-// [[file:readme.org::*Special Taskbar][Special Taskbar:1]]
-const SpecialTaskbar = () => {
-    const CliButton = (address: string, id) => {
-        const cli = hyprland.getClient(address);
-        return Widget.Box({
-            class_name: 'client',
-            hpack: 'center',
-            attribute: {address},
-            child: Widget.Button ({
-                on_clicked: () =>
-                    hyprland.messageAsync(`dispatch togglespecialworkspace ${id}`),
-                child: Widget.Icon({
-                    icon: GetClassIcon(cli.class),
-                    size: 32,
-                }),
-                tooltip_text: cli.title,
-            }),
-            setup: self => self.hook(activeCli, () => {
-                self.toggleClassName('active', activeCli.address === cli.address)
-                self.toggleClassName('inactive', activeCli.address != cli.address)
-            }),
-        })
-    };
-    const AddCliBtn = (self, address?: string) => {
-        const cli = hyprland.getClient(address);
-        const wsName = cli.workspace.name;
-        const match = /:\d+/.exec(wsName);
-        const specialId = match ? match[0].slice(1) : null;
-        const className = cli.class;
-        if (specialId && className) {
-            self.children = [...self.children, CliButton(address, specialId)];
-            print('client-added', address, 'special', specialId)
-        } else {
-            print('client-add-failed', address, 'special:null')
-        }
-    };
-    const RemoveCliBtn = (self, address?: string) => {
-        const id = hyprland.getClient(address).workspace.id;
-        if (id < 0) {
-            self.children =
-                self.children.filter(cli => cli.attribute.address !== address)
-            print('client-removed', address, id)
-        } else {
-            print('client-removed-failed', address, id)
-        }
-    };
-    return Widget.Box({
-        class_name: "special taskbar",
-        vertical: true,
-        children: [],
-        setup: self => {
-            hyprland.clients.map(cli => AddCliBtn(self, cli.address));
-            self.hook(hyprland, AddCliBtn, 'client-added')
-                .hook(hyprland, RemoveCliBtn, 'client-removed');
-        }
-    })
-}
-// Special Taskbar:1 ends here
+const normalTaskbar = Taskbar(1, 10, 'normal taskbar', true);
+const specialTaskbar = Taskbar(-98, 10, 'special taskbar', false);
+// Taskbar:2 ends here
 
-// [[file:readme.org::*Time][Time:1]]
+// * Time
 const nowTime = Variable(GLib.DateTime.new_now_local(), {
     poll: [1000, () => GLib.DateTime.new_now_local()],
 });
@@ -235,7 +196,7 @@ const FancyClock = () => Widget.Box({
 });
 // Time:1 ends here
 
-// [[file:readme.org::*System Tray][System Tray:1]]
+// * System tray
 const systemtray = await Service.import('systemtray');
 const SysTray = () => Widget.Box({
     class_name: 'systray',
@@ -260,7 +221,8 @@ const SysTray = () => Widget.Box({
 });
 // System Tray:1 ends here
 
-// [[file:readme.org::*Bluetooth][Bluetooth:1]]
+// * System Info
+// ** Bluetooth
 const bluetooth = await Service.import('bluetooth')
 
 const ConnectedList = Widget.Box({
@@ -285,7 +247,7 @@ const BluetoothIndicator = () => Widget.Icon({
 })
 // Bluetooth:1 ends here
 
-// [[file:readme.org::*Network][Network:1]]
+// ** Network
 const network = await Service.import('network');
 const WifiIndicator = () => Widget.Box({
     vertical: true,
@@ -309,7 +271,7 @@ const NetworkIndicator = () => Widget.Stack({
 });
 // Network:1 ends here
 
-// [[file:readme.org::*Audio][Audio:1]]
+// ** Audio
 export const audio = await Service.import('audio');
 globalThis.audio = audio;
 const audioProgress = (type) => Widget.CircularProgress({
@@ -329,7 +291,7 @@ const audioControl = (type = 'speaker') => Widget.EventBox({
 });
 // Audio:1 ends here
 
-// [[file:readme.org::*Brightness][Brightness:1]]
+// ** Brightness
 const brightnessIcon = () => Widget.Label({
     class_name: 'nerd-icons',
     label: "",
@@ -347,7 +309,7 @@ const brightnessControl = () => Widget.EventBox({
 })
 // Brightness:1 ends here
 
-// [[file:readme.org::*Battery][Battery:1]]
+// ** Battery
 const batteryIcon = () => Widget.Label({
     class_name: 'nerd-icons',
     label: "󱐌",
@@ -359,9 +321,8 @@ const batteryProgress = () => Widget.CircularProgress({
     value: battery.bind('percent').as(p => p > 0 ? p / 100 : 0),
     child: batteryIcon(),
 });
-// Battery:1 ends here
 
-// [[file:readme.org::*System info][System info:1]]
+// ** SystemInfo
 const SystemInfo = () => Widget.Box({
     class_name: 'system-info',
     vertical: true,
@@ -375,19 +336,20 @@ const SystemInfo = () => Widget.Box({
         batteryProgress(),
     ],
 });
-// System info:1 ends here
-
-// [[file:readme.org::*Audio Visualizer][Audio Visualizer:1]]
+// * Audio Visualizer
+const cava = new Cava(2, '8bit');
 const AudioVisualizer = (id) => Widget.ProgressBar({
     class_name: 'audio-visualizer',
     vertical: true,
     expand: true,
-    value: cava.bind().as(c => c[id]),
+    hpack: 'center',
+    // value: cava.bind('bar-value').as(c => c[id]),
     setup: self => self.set_inverted(true),
+    css: 'min-width: 55px',
 });
-// Audio Visualizer:1 ends here
 
-// [[file:readme.org::*Left Bar][Left Bar:1]]
+// * Windows
+// ** Left bar
 const barL = () => Widget.Window({
     name: 'bar-left',
     class_name: 'bg left',
@@ -396,6 +358,7 @@ const barL = () => Widget.Window({
     monitor: 0,
     child: Widget.Box({
         class_name: 'bar left',
+        vertical: true,
         child: Widget.Overlay({
             child: Widget.Box({expand: true}),
             overlays: [
@@ -409,23 +372,22 @@ const barL = () => Widget.Window({
                             Widget.Separator({orientation:1}),
                         ],
                     }),
-                    center_widget: NormalTaskbar(1, 10),
+                    center_widget: normalTaskbar,
                     end_widget: Widget.Box({
                         vpack: "end",
                         vertical: true,
                         children: [
                             Widget.Separator({orientation:1}),
-                            SpecialTaskbar(),
+                            specialTaskbar,
                         ]
-                    })
+                    }),
                 }),
             ],
         }),
     }),
 });
-// Left Bar:1 ends here
 
-// [[file:readme.org::*Right Bar][Right Bar:1]]
+// ** Right bar
 const barR = () => Widget.Window({
     name: 'bar-right',
     class_name: 'bg right',
@@ -441,11 +403,12 @@ const barR = () => Widget.Window({
                 Widget.CenterBox({
                     vertical: true,
                     start_widget: FancyClock(),
-                    center_widget: hello(),
+                    center_widget: hello,
                     end_widget: Widget.Box({
                         vpack: "end",
                         vertical: true,
                         children: [
+                            hello,
                             SystemInfo(),
                         ]
                     })
@@ -454,9 +417,8 @@ const barR = () => Widget.Window({
         })
     })
 });
-// Right Bar:1 ends here
 
-// [[file:readme.org::*Top Bottom Bar][Top Bottom Bar:1]]
+// ** Top & Bottom bar
 const barB = () => Widget.Window({
     name: 'bar-bottom',
     class_name: 'bg bottom',
@@ -475,7 +437,7 @@ const barT = () => Widget.Window({
 });
 // Top Bottom Bar:1 ends here
 
-// [[file:readme.org::*Export][Export:1]]
+// * Export
 const scss = `${App.configDir}/style.scss`
 const css = `/tmp/ags/style.css`
 Utils.exec(`sassc ${scss} ${css}`)
