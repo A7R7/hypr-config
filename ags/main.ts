@@ -68,7 +68,6 @@ const CliBtn = (address: string) => {
 };
 
 // ** Taskbar
-const addrToWsId = new Map();
 const getWsId = (wsName: string) => {
     // Assume name === string(id) for normal workspaces.
     const match = /:\d+/.exec(wsName);
@@ -76,31 +75,32 @@ const getWsId = (wsName: string) => {
 }
 const wsLabels = ["󰎤","󰎧","󰎪","󰎭","󰎱","󰎳","󰎶","󰎹","󰎼","󰎡"];
 const Taskbar = (start, length, className, showLabel) => {
+    const addrToWsId = new Map();
     const AddCliBtn = (self, address: string) => {
         if (!address) return;
         let id = hyprland.getClient(address).workspace.id;
-        if (id < start || id >= start + length) return;
+        if (!id || id < start || id >= start + length) return;
         addrToWsId.set(address, id);
         const child = self.children.find(w => w.attribute.id === id);
         if (child) {
             child.children = [...child.children, CliBtn(address)];
-            print('client-added', address, id)
+            print(start, ':', 'client-added', address, id)
         } else {
-            print('client-add-failed', address, id)
+            print(start, ':', 'client-add-failed', address, id)
         }
     };
     const RemoveCliBtn = (self, address: string) => {
         if (!address) return;
         let id = addrToWsId.get(address);
-        if (!id) return;
+        if (!id || id < start || id >= start + length) return;
         addrToWsId.delete(address);
         const child = self.children.find(ws => ws.attribute.id === id);
         if (child) {
             child.children = child.children
                 .filter(cli => cli.attribute.address !== address)
-            print('client-removed', address, id)
+            print(start, ':', 'client-removed', address, id)
         } else {
-            print('client-removed-failed', address, id)
+            print(start, ':', 'client-removed-failed', address, id)
         }
     };
     const AddWsBox = (self, name?: string) => {
@@ -110,15 +110,15 @@ const Taskbar = (start, length, className, showLabel) => {
         let i = self.children.findIndex(ws => ws.attribute.id > id);
         i = i === -1? self.children.length : i;
         self.children = self.children.toSpliced(i, 0, ws);
-        print('workspace-added', name, i);
+        print(start, ':', 'workspace-added', name, i);
     };
     const RemoveWsBox = (self, name?: string) => {
         const id = getWsId(name);
         if (!id || id < start || id >= start + length) return;
         self.children = self.children.filter(ws => ws.attribute.id !== id);
-        print('workspace-removed', id);
+        print(start, ':', 'workspace-removed', id);
     };
-    return Widget.Box({
+    const Taskbar = Widget.Box({
         class_name: className,
         vertical: true,
         children: [],
@@ -133,15 +133,15 @@ const Taskbar = (start, length, className, showLabel) => {
                     if (event === "movewindow") {
                         const argv = params.split(',');
                         const address = '0x' + argv[0];
-                        const id = getWsId(argv[1]);
-                        print(event, address, id);
-                        if (id < start || id >= start + length) return;
+                        const id = getWsId(argv[1]); // target id
+                        print(start, ':', event, address, id);
                         RemoveCliBtn(self, address);
                         AddCliBtn(self, address, id);
                     }
                 }, "event");
         }
-    })
+    });
+    return Taskbar;
 }
 
 const normalTaskbar = Taskbar(1, 10, 'normal taskbar', true);
