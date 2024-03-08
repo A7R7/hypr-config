@@ -56,6 +56,7 @@ button {
     min-height: 20px;
 }
 
+// * Progress bar
 progressbar {
     /* border: 1px solid $fg; */
     border-radius: 10px;
@@ -70,23 +71,29 @@ progressbar progress{
     background-image: linear-gradient(to top, rgba(blue, 0.1), rgba($fg, 0.9));
 }
 
-
+// * Taskbar
 .taskbar {
     transition: 100ms;
+    margin: 10px 5px;
     .workspace {
-        margin: 10px 5px;
-        border-radius: 8px;
+        box {
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
         border: 1px solid transparent;
         transition: 200ms;
-        >label {
+        label {
             font-size: 25px;
             color: rgba(white, 0.8);
             border-radius: 4px;
         }
         &.active {
-            border: 1px solid $fg;
-            background: rgba($fg, 0.1);
-            >label {
+            box {
+                margin-bottom: 30px;
+                border: 1px solid $fg;
+                background: rgba($fg, 0.1);
+            }
+            label {
                 color: rgba($fg, 1.0);
             }
         }
@@ -99,19 +106,20 @@ progressbar progress{
     padding: 5px;
     /* background-color: lightslategray; */
     &.active{
-        -gtk-icon-shadow: 0 5px rgba($fg, 0.9);
+        -gtk-icon-shadow: -3px 3px rgba($fg, 0.9);
     }
-    >button{
-        -gtk-icon-shadow: 0 2px rgba($fg, 0.8);
-        transition: 100ms;
-        &:hover {
-            -gtk-icon-effect: highlight;
-        }
-        &:active {
-            -gtk-icon-effect: dim;
-            /* -gtk-icon-shadow: -4px 2px rgba(aqua, 0.8); */
-            transition: 50ms;
-        }
+    -gtk-icon-shadow: 0 2px rgba($fg, 0.8);
+    transition: 100ms;
+    &:hover {
+        -gtk-icon-effect: highlight;
+    }
+    &:active {
+        -gtk-icon-effect: dim;
+        /* -gtk-icon-shadow: -4px 2px rgba(aqua, 0.8); */
+        transition: 50ms;
+    }
+    &.drag{
+        -gtk-icon-effect: dim;
     }
 }
 
@@ -128,6 +136,7 @@ progressbar progress{
     }
 }
 
+// * Systray
 .systray {
     margin: 10px 0;
     .tray-item {
@@ -174,6 +183,7 @@ calendar {
     margin: 10px 0;
     padding: 5px;
 }
+
 
 .circular-progress {
     min-width: 40px;

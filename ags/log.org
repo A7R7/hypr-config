@@ -483,3 +483,29 @@ And I cannot reboot using command line.
 ** read_uint16_async
 There is only read_uint16, no async version of it.
 Therefore, I have to implement it.
+* <2024-03-08 Fri>
+** Implement: Taskbar button drag
+First, add a target
+#+begin_src js
+const TARGET = [Gtk.TargetEntry.new("text/plain", Gtk.TargetFlags.SAME_APP, 0)]
+#+end_src
+Then, add some 'on's on button widgets to configure it as drag source.
+#+begin_src js
+self.on("drag-data-get", (_w, _c, data) => data.set_text(address, address.length))
+self.on("drag-begin", (_, context) => {
+    // Gtk.drag_set_icon_surface(context, createSurfaceFromWidget(self))
+    print("begin to drag")
+    self.toggleClassName("hidden", true)
+})
+self.on("drag-end", () => self.toggleClassName("hidden", false))
+self.drag_source_set(Gdk.ModifierType.BUTTON1_MASK, TARGET, Gdk.DragAction.COPY)
+#+end_src
+
+Last, configure workspace eventbox to be drag target.
+#+begin_src js
+self.drag_dest_set(Gtk.DestDefaults.ALL, TARGET, Gdk.DragAction.COPY)
+self.connect("drag-data-received", (_w, _c, _x, _y, data) => {
+    const address = new TextDecoder().decode(data.get_data())
+    dispatch(`movetoworkspacesilent ${id},address:${address}`)
+})
+#+end_src

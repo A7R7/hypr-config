@@ -1,6 +1,7 @@
 // * imports
 const { GLib } = imports.gi;
 import Gtk from 'gi://Gtk?version=3.0';
+import Gdk from "gi://Gdk"
 import { GetClassIcon } from './utils.js';
 import brightness from './brightness.js';
 import { Cava } from './cava.js'
@@ -10,57 +11,98 @@ const hello = Widget.Label(' ');
 export const hyprland = await Service.import('hyprland');
 const activeWs = hyprland.active.workspace;
 const activeCli = hyprland.active.client;
-const dispatch = cmd => hyprland.messageAsync(`dispatch ${cmd}`);
+const dispatch = (args: string) => hyprland.messageAsync(`dispatch ${args}`)
 
 globalThis.hyprland = hyprland;
 // Service:1 ends here
 
 // ** Workspace Box
+const TARGET = [Gtk.TargetEntry.new("text/plain", Gtk.TargetFlags.SAME_APP, 0)]
 const WsBox = (id, label?) => {
-    return Widget.Box({
+    return Widget.EventBox({
         class_name: 'workspace',
-        vertical: true,
         attribute: { id },
-        children: label ? [
-            Widget.Label({
-                attribute: {address: 'label'},
-                class_name: 'nerd-icons',
-                label: label,
-            }), ] : [],
-        setup: self => self
-            .hook(activeWs, () => {
+        child: Widget.Box({
+            vertical: true,
+            children: label ? [
+                Widget.Label({
+                    attribute: {address: 'label'},
+                    class_name: 'nerd-icons',
+                    label: label,
+                }), ] : [],
+        }),
+        setup: self => {
+            self.hook(activeWs, () => {
                 self.toggleClassName('active', activeWs.id === id)
                 self.toggleClassName('inactive', activeWs.id != id)
             })
+            self.drag_dest_set(Gtk.DestDefaults.ALL, TARGET, Gdk.DragAction.COPY)
+            self.connect("drag-data-received", (_w, _c, _x, _y, data) => {
+                const address = new TextDecoder().decode(data.get_data())
+                dispatch(`movetoworkspacesilent ${id},address:${address}`)
+            })
+        }
     })
 };
 
 // ** Client Button
+const CliMenu = (address: string) => {
+    let cli = hyprland.getClient(address);
+    const menuItems = [];
+    for (const key in cli) {
+        menuItems.push(Widget.MenuItem({
+            child: Widget.Label({
+                hpack: 'start',
+                label: `${key} : ${cli[key]}`,
+            }),
+            on_activate: () => {
+                Utils.execAsync(`echo ${cli[key]} | wl-copy`);
+            }
+        }))
+    };
+    const menu = Widget.Menu({
+        children: menuItems,
+        setup: self => self.on("notify::visible", (self) => {
+            if (!self.visible) self.destroy()
+        })
+    });
+    return menu;
+}
 const CliBtn = (address: string) => {
-  const cli = hyprland.getClient(address);
+    const cli = hyprland.getClient(address);
     // print('cli-added', address);
-    const cliBtn = Widget.Box({
+    const cliBtn = Widget.Button({
         class_name: 'client',
         hpack: 'center',
         attribute: {address},
-        child: Widget.Button ({
-            on_clicked: () => {
-                let id = hyprland.getClient(address).workspace.id
-                id < 0
-                    ? hyprland.messageAsync(`dispatch togglespecialworkspace ${id + 99}`)
-                    : hyprland.messageAsync(`dispatch focuswindow address:${address}`)
-            },
-            child: Widget.Icon({
-                icon: GetClassIcon(cli.class),
-                size: 32,
-            }),
-            tooltip_text: cli.title,
+        on_clicked: () => {
+            let id = hyprland.getClient(address).workspace.id
+            id < 0 ? dispatch(`togglespecialworkspace ${id + 99}`)
+                : dispatch(`focuswindow address:${address}`)
+        },
+        on_secondary_click: (_, event) => {
+            CliMenu(address).popup_at_pointer(event);
+        },
+        child: Widget.Icon({
+            hpack: 'center',
+            icon: GetClassIcon(cli.class),
+            size: 32,
         }),
-        setup: self => self
-            .hook(activeCli, () => {
+        tooltip_text: cli.title,
+        setup: self => {
+            self.hook(activeCli, () => {
                 self.toggleClassName('active', activeCli.address === address)
                 self.toggleClassName('inactive', activeCli.address != address)
             })
+            .on("drag-data-get", (_w, _c, data) => data.set_text(address, address.length))
+            .on("drag-begin", (_, context) => {
+                // Gtk.drag_set_icon_surface(context, createSurfaceFromWidget(self))
+                print("begin to drag")
+                self.toggleClassName("drag", true)
+            })
+            .on("drag-end", () => self.toggleClassName("drag", false))
+            .drag_source_set(Gdk.ModifierType.BUTTON1_MASK, TARGET, Gdk.DragAction.COPY)
+        }
     });
     print('new clibtn', address);
     print('   ', cliBtn)
@@ -83,7 +125,7 @@ const Taskbar = (start, length, className, showLabel) => {
         addrToWsId.set(address, id);
         const child = self.children.find(w => w.attribute.id === id);
         if (child) {
-            child.children = [...child.children, CliBtn(address)];
+            child.child.children = [...child.child.children, CliBtn(address)];
             print(start, ':', 'client-added', address, id)
         } else {
             print(start, ':', 'client-add-failed', address, id)
@@ -96,7 +138,7 @@ const Taskbar = (start, length, className, showLabel) => {
         addrToWsId.delete(address);
         const child = self.children.find(ws => ws.attribute.id === id);
         if (child) {
-            child.children = child.children
+            child.child.children = child.child.children
                 .filter(cli => cli.attribute.address !== address)
             print(start, ':', 'client-removed', address, id)
         } else {
