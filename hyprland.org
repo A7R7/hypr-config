@@ -185,11 +185,6 @@ gestures {
 ** Devices
 
 See https://wiki.hyprland.org/Configuring/Keywords/#executing for more
- #+begin_src conf
-  device:epic mouse V1 {
-    sensitivity = -0.5
-  }
- #+end_src
 
 ** Misc
  #+begin_src conf
