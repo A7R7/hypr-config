@@ -6,16 +6,7 @@
 $fg:cyan;
 $bg:rgba(#11142c, 0.8);
 
-button {
-    // margin: 5px;
-    padding: unset;
-    background-image: unset;
-    border: unset;
-    box-shadow: unset;
-    color: unset;
-    min-width: 0;
-}
-
+// * bar
 .bg {
     &.top {
         transition: 50ms;
@@ -55,39 +46,21 @@ button {
     /* margin: 20px 20px; */
     min-height: 20px;
 }
-
-// * Progress bar
-progressbar {
-    /* border: 1px solid $fg; */
-    border-radius: 10px;
+// * Button
+.toggle-button {
+    &.on {
+        color:$fg;
+    }
 }
-progressbar trough {
-    min-height: 0px;
-    border-radius: 20px;
-}
-progressbar progress{
-    min-width: 50px;
-    // animation-duration: 100ms;
-    background-image: linear-gradient(to top, rgba(blue, 0.1), rgba($fg, 0.9));
-}
-
 // * Taskbar
-.taskbar {
+.taskbar.normal {
     transition: 100ms;
-    margin: 10px 5px;
+    /* margin: 10px 5px; */
     .workspace {
-        box {
-            margin-bottom: 30px;
-            border-radius: 8px;
-        }
         border: 1px solid transparent;
         transition: 200ms;
-        label {
-            font-size: 25px;
-            color: rgba(white, 0.8);
-            border-radius: 4px;
-        }
-        &.active {
+        &.active, &:drop(active) {
+            transition: 1000ms;
             box {
                 margin-bottom: 30px;
                 border: 1px solid $fg;
@@ -96,8 +69,30 @@ progressbar progress{
             label {
                 color: rgba($fg, 1.0);
             }
+            &.hidden label{
+                    font-size: 25px;
+            }
         }
 
+        &.hidden {
+            box {
+                margin-bottom: 10px;
+            }
+            label {
+                font-size: 8px;
+            }
+        }
+
+        box {
+            margin: 0 5px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        label {
+            font-size: 25px;
+            color: rgba($fg, 0.7);
+            border-radius: 4px;
+        }
     }
 }
 
@@ -204,6 +199,23 @@ calendar {
 .tray-button {
     margin: 8px 5px;
 }
+
+// * Elements
+
+progressbar {
+    /* border: 1px solid $fg; */
+    border-radius: 10px;
+}
+progressbar trough {
+    min-height: 0px;
+    border-radius: 20px;
+}
+progressbar progress{
+    min-width: 50px;
+    // animation-duration: 100ms;
+    background-image: linear-gradient(to top, rgba(blue, 0.1), rgba($fg, 0.9));
+}
+
 
 separator {
     background: $fg;

@@ -16,12 +16,29 @@ const dispatch = (args: string) => hyprland.messageAsync(`dispatch ${args}`)
 globalThis.hyprland = hyprland;
 // Service:1 ends here
 
+var focusOnHover = true;
+const TogglefocusOnHover = () => Widget.Button ({
+    class_name: 'on toggle-button',
+    child: Widget.Label({
+        label: "󰈈",
+        class_name: 'nerd-icons',
+    }),
+    on_clicked: (self) => {
+        focusOnHover = !focusOnHover;
+        self.toggleClassName("on", focusOnHover);
+    },
+    tooltip_text: "focus on hover: " + focusOnHover ? "on" : "off",
+})
+
 // ** Workspace Box
 const TARGET = [Gtk.TargetEntry.new("text/plain", Gtk.TargetFlags.SAME_APP, 0)]
 const WsBox = (id, label?) => {
     return Widget.EventBox({
         class_name: 'workspace',
         attribute: { id },
+        on_hover: () => {
+            if (id > 0) dispatch(`workspace`, id);
+        },
         child: Widget.Box({
             vertical: true,
             children: label ? [
@@ -32,20 +49,25 @@ const WsBox = (id, label?) => {
                 }), ] : [],
         }),
         setup: self => {
+            self.toggleClassName('hidden', true);
             self.hook(activeWs, () => {
                 self.toggleClassName('active', activeWs.id === id)
-                self.toggleClassName('inactive', activeWs.id != id)
-            })
-            self.drag_dest_set(Gtk.DestDefaults.ALL, TARGET, Gdk.DragAction.COPY)
+            });
+            self.drag_dest_set(Gtk.DestDefaults.ALL, TARGET, Gdk.DragAction.COPY);
             self.connect("drag-data-received", (_w, _c, _x, _y, data) => {
                 const address = new TextDecoder().decode(data.get_data())
-                dispatch(`movetoworkspacesilent ${id},address:${address}`)
-            })
+                if (focusOnHover) {
+                    dispatch(`movetoworkspace ${id},address:${address}`)
+                } else {
+                    dispatch(`movetoworkspacesilent ${id},address:${address}`)
+                }
+            });
         }
     })
 };
 
 // ** Client Button
+
 const CliMenu = (address: string) => {
     let cli = hyprland.getClient(address);
     const menuItems = [];
@@ -80,8 +102,18 @@ const CliBtn = (address: string) => {
             id < 0 ? dispatch(`togglespecialworkspace ${id + 99}`)
                 : dispatch(`focuswindow address:${address}`)
         },
+        on_hover: () => {
+            if (focusOnHover) {
+                let id = hyprland.getClient(address).workspace.id
+                id < 0 ? dispatch(`togglespecialworkspace ${id + 99}`)
+                    : dispatch(`focuswindow address:${address}`)
+            }
+        },
         on_secondary_click: (_, event) => {
             CliMenu(address).popup_at_pointer(event);
+        },
+        on_middle_click: (_, event) => {
+            dispatch(`closewindow address:${address}`)
         },
         child: Widget.Icon({
             hpack: 'center',
@@ -160,16 +192,25 @@ const Taskbar = (start, length, className, showLabel) => {
         self.children = self.children.filter(ws => ws.attribute.id !== id);
         print(start, ':', 'workspace-removed', id);
     };
+    const ToggleVisible = (self, visible: bool, name?: string) => {
+        const id = getWsId(name);
+        if (!id || id < start || id >= start + length) return;
+        const ws = self.children.find(ws => ws.attribute.id === id);
+        ws.toggleClassName("hidden", !visible);
+        // ws.visible = visible;
+    }
+    const HideWsBox = (self, name?:string) => ToggleVisible(self, false, name);
+    const ShowWsBox = (self, name?:string) => ToggleVisible(self, true, name);
+
     const Taskbar = Widget.Box({
         class_name: className,
         vertical: true,
-        children: [],
+        children: Array.from({ length }, (_, i) => i + start).map(
+            (id) => WsBox(id, showLabel? wsLabels[id - start] : null)
+        ),
         setup: self => {
-            hyprland.workspaces.map(ws => AddWsBox(self, ws.name));
             hyprland.clients.map(cli => AddCliBtn(self, cli.address));
-            self.hook(hyprland, AddWsBox, 'workspace-added')
-                .hook(hyprland, RemoveWsBox, 'workspace-removed')
-                .hook(hyprland, AddCliBtn, 'client-added')
+            self.hook(hyprland, AddCliBtn, 'client-added')
                 .hook(hyprland, RemoveCliBtn, 'client-removed')
                 .hook(hyprland, (w, event, params) => {
                     if (event === "movewindow") {
@@ -181,6 +222,9 @@ const Taskbar = (start, length, className, showLabel) => {
                         AddCliBtn(self, address, id);
                     }
                 }, "event");
+            hyprland.workspaces.map(ws => ShowWsBox(self, ws.name));
+            self.hook(hyprland, ShowWsBox, 'workspace-added')
+            self.hook(hyprland, HideWsBox, 'workspace-removed')
         }
     });
     return Taskbar;
@@ -412,6 +456,7 @@ const barL = () => Widget.Window({
                         children: [
                             SysTray(),
                             Widget.Separator({orientation:1}),
+                            TogglefocusOnHover(),
                         ],
                     }),
                     center_widget: normalTaskbar,
