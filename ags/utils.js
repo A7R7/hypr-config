@@ -62,9 +62,11 @@ applicationsDirs.forEach(dir => {
     desktopFiles.map((fname) => {
         const fileContent = Utils.readFile(dir + '/' + fname);
         const parsedIni = parseINI(fileContent);
-        const className = fname.split('.').slice(0, -1).join('.');
-        const icon = parsedIni['Desktop Entry']['Icon'];
-        classToIcon.set(className, icon);
+        if (parsedIni && parsedIni['Desktop Entry'] && parsedIni['Desktop Entry']['Icon']) {
+            const className = fname.split('.').slice(0, -1).join('.');
+            const icon = parsedIni['Desktop Entry']['Icon'];
+            classToIcon.set(className, icon);
+        }
     })
 
 });
