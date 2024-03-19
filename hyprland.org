@@ -83,7 +83,7 @@ decoration {
   shadow_range = 15
   shadow_render_power = 3
   col.shadow = rgba(00F5F688)
-  blurls=
+  blurls = nil
   blur {
     # enable kawase window background blur. default true
     enabled = true
@@ -100,7 +100,7 @@ decoration {
     # make floating windows ignore tiled windows in their blur.
     # Only available if blur_new_optimizations is true.
     # Will reduce overhead on loating blur significantly.
-    xray = true
+    xray = false
     # how much noise to apply. 0.0 - 1.0. default 0.0117
     noise = 0.0117
     # contrast modulation for blur. 0.0 - 2.0. default 0.8916
@@ -596,7 +596,10 @@ The tooltip window's class is "", and it's floating. Therefore adding the follow
 #+begin_src conf
 windowrulev2 = noinitialfocus, class:^()$, floating:1
 #+end_src
-
+** Fcitx
+#+begin_src conf
+windowrulev2 = noblur, class:fcitx
+#+end_src
 * Workspace Rules
 Currently I have no workspace rules.
 
