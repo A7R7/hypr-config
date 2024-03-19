@@ -9,7 +9,7 @@
 - cava :: used by audio visualizer.
 - wl-clipboard :: used to copy to clipboard.
 
-* Import
+* COMMENT Import
 #+begin_src typescript
 const { GLib } = imports.gi;
 import Gtk from 'gi://Gtk?version=3.0';
@@ -18,7 +18,7 @@ import brightness from './brightness.js';
 const hello = Widget.Label(' ');
 #+end_src
 
-* Cava
+* COMMENT Cava
 #+begin_src typescript
 const cava = Variable('', {
     listen: [['python3', App.configDir + '/cava.py'], out => JSON.parse(out)],
@@ -455,7 +455,7 @@ const Taskbar = (start, length, className, showLabel) => {
 const normalTaskbar = Taskbar(1, 10, `taskbar normal`, true);
 const specialTaskbar = Taskbar(-98, 10, `taskbar special`, false);
 #+end_src
-* Taskbar v4
+* COMMENT Taskbar v4
 v4 is derived from v2
 ** Service
 #+begin_src typescript
@@ -604,7 +604,7 @@ const Taskbar = (start, length, className, showLabel) => {
 const normalTaskbar = Taskbar(1, 10, 'normal taskbar', true);
 const specialTaskbar = Taskbar(-98, 10, 'special taskbar', false);
 #+end_src
-* Time
+* COMMENT Time
 #+begin_src typescript
 const nowTime = Variable(GLib.DateTime.new_now_local(), {
     poll: [1000, () => GLib.DateTime.new_now_local()],
@@ -652,7 +652,7 @@ const FancyClock = () => Widget.Box({
     ],
 });
 #+end_src
-* System Tray
+* COMMENT System Tray
 #+begin_src typescript
 const systemtray = await Service.import('systemtray');
 const SysTray = () => Widget.Box({
@@ -677,7 +677,7 @@ const SysTray = () => Widget.Box({
                                          ),
 });
 #+end_src
-* System Info
+* COMMENT System Info
 ** Bluetooth
 #+begin_src typescript
 const bluetooth = await Service.import('bluetooth')
@@ -801,7 +801,7 @@ const SystemInfo = () => Widget.Box({
 });
 #+end_src
 
-* Audio Visualizer
+* COMMENT Audio Visualizer
 #+begin_src typescript
 const AudioVisualizer = (id) => Widget.ProgressBar({
     class_name: 'audio-visualizer',
@@ -811,7 +811,7 @@ const AudioVisualizer = (id) => Widget.ProgressBar({
     setup: self => self.set_inverted(true),
 });
 #+end_src
-* Window
+* COMMENT Window
 ** Left Bar
 #+begin_src typescript
 const barL = () => Widget.Window({
@@ -903,7 +903,7 @@ const barT = () => Widget.Window({
     child: Widget.Box({css:'min-height: 20px;'}),
 });
 #+end_src
-* Export
+* COMMENT Export
 #+begin_src typescript
 const scss = `${App.configDir}/style.scss`
 const css = `/tmp/ags/style.css`
