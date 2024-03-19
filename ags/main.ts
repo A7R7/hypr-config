@@ -7,6 +7,8 @@ import brightness from './brightness.js';
 import { Cava } from './cava.js'
 const hello = Widget.Label(' ');
 // * Taskbar
+export const applications = await Service.import('applications');
+globalThis.applications = applications;
 // ** Hyprland
 export const hyprland = await Service.import('hyprland');
 const activeWs = hyprland.active.workspace;
@@ -36,22 +38,23 @@ const WsBox = (id, label?) => {
     return Widget.EventBox({
         class_name: 'workspace',
         attribute: { id },
-        on_hover: () => {
-            if (id > 0) dispatch(`workspace`, id);
-        },
         child: Widget.Box({
             vertical: true,
             children: label ? [
-                Widget.Label({
+                Widget.Button({
                     attribute: {address: 'label'},
                     class_name: 'nerd-icons',
                     label: label,
+                    on_clicked: () => dispatch(`workspace ${id}`),
                 }), ] : [],
         }),
+        on_clicked: () => {
+            dispatch(`workspace ${id}`);
+        },
         setup: self => {
             self.toggleClassName('hidden', true);
             self.hook(activeWs, () => {
-                self.toggleClassName('active', activeWs.id === id)
+                self.toggleClassName('focus', activeWs.id === id)
             });
             self.drag_dest_set(Gtk.DestDefaults.ALL, TARGET, Gdk.DragAction.COPY);
             self.connect("drag-data-received", (_w, _c, _x, _y, data) => {
@@ -123,8 +126,8 @@ const CliBtn = (address: string) => {
         tooltip_text: cli.title,
         setup: self => {
             self.hook(activeCli, () => {
-                self.toggleClassName('active', activeCli.address === address)
-                self.toggleClassName('inactive', activeCli.address != address)
+                self.toggleClassName('focus', activeCli.address === address)
+                self.toggleClassName('unfocus', activeCli.address != address)
             })
             .on("drag-data-get", (_w, _c, data) => data.set_text(address, address.length))
             .on("drag-begin", (_, context) => {
@@ -441,6 +444,7 @@ const barL = () => Widget.Window({
     class_name: 'bg left',
     anchor: ['left', 'top', 'bottom'],
     exclusivity: 'exclusive',
+    // layer: 'bottom',
     monitor: 0,
     child: Widget.Box({
         class_name: 'bar left',
@@ -480,6 +484,7 @@ const barR = () => Widget.Window({
     class_name: 'bg right',
     anchor: ['right', 'top', 'bottom'],
     exclusivity: 'exclusive',
+    // layer: 'bottom',
     monitor: 0,
     child: Widget.Box({
         class_name: 'bar right',

@@ -25,12 +25,11 @@ $bg:rgba(#11142c, 0.8);
 }
 
 .bar {
-    background-color: rgba(#11142c, 0.8);
+    background-color: $bg;
     min-width: 55px;
-    margin-top: 20px;
-    margin-bottom: 20px;
+    margin: 50px 0;
     border: 1px solid $fg;
-    border-radius: 5px;
+    border-radius: 10px;
     box-shadow: 0px 0px 10px 1px rgba($fg, .5);
     &.left {
         margin-left: 5px;
@@ -54,44 +53,38 @@ $bg:rgba(#11142c, 0.8);
 }
 // * Taskbar
 .taskbar.normal {
-    transition: 100ms;
     /* margin: 10px 5px; */
-    .workspace {
-        border: 1px solid transparent;
-        transition: 200ms;
-        &.active, &:drop(active) {
-            transition: 1000ms;
-            box {
-                margin-bottom: 30px;
-                border: 1px solid $fg;
-                background: rgba($fg, 0.1);
-            }
-            label {
+    .workspace { // eventbox
+        // > * > * {
+        //     transition: 150ms;
+        // }
+        & > * { // box
+            margin: 10px 4px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            &>:first-child {
+                margin: -5px 0;
                 color: rgba($fg, 1.0);
             }
-            &.hidden label{
-                    font-size: 25px;
-            }
         }
-
-        &.hidden {
-            box {
-                margin-bottom: 10px;
-            }
-            label {
+        &.hidden > * {
+            // margin: 0px 4px;
+            > * {
+                min-height: 38px;
                 font-size: 8px;
             }
         }
-
-        box {
-            margin: 0 5px;
-            margin-bottom: 30px;
-            border-radius: 8px;
+        &.hidden:hover > * {
+            > * {
+                font-size: 30px;
+            }
         }
-        label {
-            font-size: 25px;
-            color: rgba($fg, 0.7);
-            border-radius: 4px;
+        &.focus > *, &:drop(active) > * {
+            border: 1px solid $fg;
+            background: rgba($fg, 0.1);
+            > * {
+                font-size: 30px;
+            }
         }
     }
 }
@@ -100,7 +93,7 @@ $bg:rgba(#11142c, 0.8);
     border-radius: 10px;
     padding: 5px;
     /* background-color: lightslategray; */
-    &.active{
+    &.focus{
         -gtk-icon-shadow: -3px 3px rgba($fg, 0.9);
     }
     -gtk-icon-shadow: 0 2px rgba($fg, 0.8);
@@ -124,7 +117,7 @@ $bg:rgba(#11142c, 0.8);
         transition: 200ms;
         margin: 4px 0;
         border: 1px solid transparent;
-        &.active {
+        &.focus {
             border: 1px solid $fg;
             background: rgba($fg, 0.1);
         }
